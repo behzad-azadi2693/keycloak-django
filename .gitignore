@@ -1,0 +1,11 @@
+venv/
+user_service
+__pycache__/
+00*
+db*
+.git
+media/
+data/
+static/brity/
+.idea/
+.venv

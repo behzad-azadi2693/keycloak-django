@@ -1,0 +1,72 @@
+version : '3.9'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak-data:/opt/keycloak/data
+    ports:
+      - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
+    networks:
+      - account_network
+
+  redis:
+    image: redis
+    hostname: ${REDIS_HOST}
+    container_name: ${REDIS_HOST}
+    restart: on-failure
+    command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis.conf
+    networks:
+      - account_network
+
+  accounts:
+    build: .
+    container_name: ${ACCOUNT_HOST}
+    hostname: ${ACCOUNT_HOST}
+    image: ${ACCOUNT_HOST}
+    ports:
+      - ${DJANGO_PORT}:${DJANGO_PORT}   
+    restart: on-failure
+    volumes:
+      - .:/accounts
+    command: sh -c "python3 manage.py makemigrations && 
+                    python3 manage.py migrate --no-input && 
+                    python3 manage.py collectstatic --no-input && 
+                    gunicorn -k gevent --workers 4 config.wsgi:application -b 0.0.0.0:${DJANGO_PORT}"
+    depends_on:
+      - redis
+    links: 
+      - redis
+    networks:
+      - account_network
+
+  celery-worker:
+    build: .
+    container_name: celery-worker-container
+    hostname: celery_worker
+    command: bash -c " celery -A config worker -l info "
+    restart: on-failure
+    depends_on:
+      - accounts
+      - redis
+    image: celery_account_image
+    volumes:
+      - .:/accounts
+    links: 
+      - redis
+    networks:
+      - account_network
+
+
+networks:
+  account_network:
