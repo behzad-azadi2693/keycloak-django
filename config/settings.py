@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from decouple import config
-
+import pyotp
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -167,7 +167,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 #CELERY
-CELERY_BROKER_URL = f'redis://{config('REDIS_HOST')}:{config('REDIS_PORT')}/1'
+CELERY_BROKER_URL = f"redis://{config('REDIS_HOST')}:{config('REDIS_PORT')}/1"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -184,3 +184,4 @@ EMAIL_HOST_USER = 'your_email@example.com'
 EMAIL_HOST_PASSWORD = 'your_password'
 
 
+VALUE_HASH = pyotp.random_base32()

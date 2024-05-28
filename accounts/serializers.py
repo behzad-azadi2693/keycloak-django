@@ -1,6 +1,6 @@
 import re
 import pytz
-import hashlib
+import bcrypt
 from django.conf import settings
 from datetime import datetime, timedelta
 from rest_framework import serializers
@@ -29,8 +29,6 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.check_email_verify() == 200:
             raise serializers.ValidationError('user exsits', code=403)
-        if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError('password not mached', code=401)
         if phone or email:
@@ -58,7 +56,7 @@ class OTPRequestSeriailizer(serializers.Serializer):
         user = UserKeyCloak()
         user.username = attrs['username']
 
-        if not phone:
+        if not phone and not email:
             raise serializers.ValidationError({'message':'username is not correct'}, code=400)
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
@@ -83,7 +81,7 @@ class OTPSigninSerializer(serializers.Serializer):
     def validate(self, attrs):
         otp, time, count, username = self.context['otp'], self.context['time'], self.context['count'], self.context['username']
         if None in [time, username, otp, count]:
-            raise serializers.ValidationError({'message':'you dont validation for change password'}, code=404)
+            raise serializers.ValidationError({'message':'you dont access for this page'}, code=404)
     
         phone, email = valid_phone_email(attrs['username'])
         time_delta, now_time = make_naive(datetime.fromisoformat(time) + timedelta(minutes=5)), make_naive(datetime.now().astimezone(pytz.timezone('Asia/Tehran')))
@@ -101,8 +99,8 @@ class OTPSigninSerializer(serializers.Serializer):
         if time_delta < now_time:
             self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
-        if otp != hashlib.sha256(f"{attrs['otp']}+{settings.SECRET_KEY}".encode('utf-8')) and username != attrs['username']:
-            self.context['request'].session.flush()
+        if not bcrypt.checkpw(f"{attrs['otp']}+{settings.VALUE_HASH}".encode(), otp.encode()):
+            raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'please first verified username'}, code=400)
         if user.check_enable() == 404:
@@ -117,7 +115,7 @@ class OTPPasswordChangeVerifySerializer(OTPSigninSerializer):
     def validate(self, attrs):
         otp, time, count, username = self.context['otp'], self.context['time'], self.context['count'], self.context['username']
         if None in [time, username, otp, count]:
-            raise serializers.ValidationError({'message':'you dont validation for change password'}, code=404)
+            raise serializers.ValidationError({'message':'you dont access for this page'}, code=404)
     
         phone, email = valid_phone_email(attrs['username'])
         time_delta, now_time = make_naive(datetime.fromisoformat(time) + timedelta(minutes=5)), make_naive(datetime.now().astimezone(pytz.timezone('Asia/Tehran')))
@@ -135,18 +133,48 @@ class OTPPasswordChangeVerifySerializer(OTPSigninSerializer):
         if time_delta < now_time:
             self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
-        if otp != hashlib.sha256(f"{attrs['otp']}+{settings.SECRET_KEY}".encode('utf-8')) and username != attrs['username']:
-            self.context['request'].session.flush()
+        if not bcrypt.checkpw(f"{attrs['otp']}+{settings.VALUE_HASH}".encode(), otp.encode()):
             raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
         if user.check_email_verify() == 404:
-            raise serializers.ValidationError({'message':'user befor verified'}, code=400)
+            raise serializers.ValidationError({'message':'please first verified username'}, code=400)
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
         return attrs
     
 
-class OTPSingnupVerifySerializer(OTPPasswordChangeVerifySerializer):
+class OTPSingnupVerifySerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    otp = serializers.IntegerField(required=True)
+
+    def validate(self, attrs):
+        otp, time, count, username = self.context['otp'], self.context['time'], self.context['count'], self.context['username']
+        if None in [time, username, otp, count]:
+            raise serializers.ValidationError({'message':'you dont access for this page'}, code=404)
     
+        phone, email = valid_phone_email(attrs['username'])
+        time_delta, now_time = make_naive(datetime.fromisoformat(time) + timedelta(minutes=5)), make_naive(datetime.now().astimezone(pytz.timezone('Asia/Tehran')))
+        user = UserKeyCloak()
+        user.username = attrs['username']
+        self.context['request'].session['OTP_ITS_COUNT'] = count + 1
+
+        if user.check_connect() == 500:
+            raise serializers.ValidationError({'message':'server not found'}, code=500)
+        if not phone and not email:
+            raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+        if count > 5:
+            self.context['request'].session.flush()
+            raise serializers.ValidationError({'message':'otp is expired'}, code=410)
+        if time_delta < now_time:
+            self.context['request'].session.flush()
+            raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
+        if not bcrypt.checkpw(f"{attrs['otp']}+{settings.VALUE_HASH}".encode(), otp.encode()):
+            raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
+        if user.check_email_verify() == 200:
+            raise serializers.ValidationError({'message':'usr befor exsits'}, code=400)
+        if user.check_enable() == 404:
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+        return attrs
+
     def create(self, validated_data):
         user = UserKeyCloak()
         user.username = validated_data['username']
@@ -161,7 +189,7 @@ class PasswordChangeSerializer(serializers.Serializer):
     def validate(self, attrs):
         time, username, change =  self.context['time'], self.context['username'], self.context['change']
         if None in [time, username, change]:
-            raise serializers.ValidationError({'message':'you dont validation for change password'}, code=404)
+            raise serializers.ValidationError({'message':'you dont access for this page'}, code=404)
 
         phone, email = valid_phone_email(username)
         time_delta, now_time = make_naive(datetime.fromisoformat(time) + timedelta(minutes=5)), make_naive(datetime.now().astimezone(pytz.timezone('Asia/Tehran')))
@@ -177,7 +205,7 @@ class PasswordChangeSerializer(serializers.Serializer):
         if time_delta < now_time:
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
         if user.check_email_verify() == 404:
-            raise serializers.ValidationError({'message':'user befor verified'}, code=400)
+            raise serializers.ValidationError({'message':'please first verified username'}, code=400)
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
         if attrs['password'] != attrs['password2']:
@@ -189,6 +217,9 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.password = validated_data['password']
         user.username = self.context['username']
         user.change_password()
+        token = TokenKeycloak()
+        token.username = self.context['username']
+        token.signout()
         return validated_data['password']
 
 

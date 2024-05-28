@@ -1,5 +1,5 @@
 import pytz
-import hashlib
+import bcrypt
 from django.conf import settings
 from datetime import datetime
 from rest_framework.views import APIView
@@ -46,7 +46,7 @@ class OTPSingnupVerifyView(APIView):
         if serializer.is_valid():
             serializer.save()
             request.session.flush()
-            return Response({'message':'accoun complete validation'}, status=200)
+            return Response({'message':'account complete validation'}, status=200)
         else:
             return Response(serializer.errors, status=400)
 
@@ -57,10 +57,10 @@ class OTPRequestView(APIView):
     @extend_schema(request=OTPRequestSeriailizer)
     def post(self, request):
         otp = randint(10000, 99999)
-        print('=================', otp)
         serializer = self.serializer_class(data=request.data, context={'otp':otp})
         if serializer.is_valid():
-            request.session['OTP_ITS'] = hashlib.sha256(f"{otp}+{settings.SECRET_KEY}".encode('utf-8'))
+            print('========OTP=========', f"{otp}+{settings.VALUE_HASH}")
+            request.session['OTP_ITS'] = bcrypt.hashpw(f"{otp}+{settings.VALUE_HASH}".encode(), bcrypt.gensalt(14)).decode()
             request.session['OTP_ITS_TIME'] = datetime.now().astimezone(pytz.timezone('Asia/Tehran')).isoformat()
             request.session['OTP_ITS_COUNT'] = 0
             request.session['ITS_USERNAME'] = serializer.data['username']

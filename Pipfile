@@ -12,6 +12,8 @@ pytz = "*"
 python-decouple = "*"
 celery = "*"
 redis = "*"
+bcrypt = "*"
+pyotp = "*"
 
 [dev-packages]
 

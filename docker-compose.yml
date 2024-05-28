@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres
     hostname: ${POSTGRES_HOST}
-    container_name: ${POSTGRES_HOST}
+    container_name: postgres_container
     command: -p ${POSTGRES_PORT}
     restart: on-failure
     environment: 
@@ -35,7 +35,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.3
     hostname: ${KEYCLOAK_HOST}
-    container_name: ${KEYCLOAK_HOST}
+    container_name: keycloak_container
     command: start-dev
     environment:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
@@ -56,7 +56,7 @@ services:
   redis:
     image: redis
     hostname: ${REDIS_HOST}
-    container_name: ${REDIS_HOST}
+    container_name: redis_container
     restart: on-failure
     command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
     environment:
@@ -69,7 +69,7 @@ services:
 
   accounts:
     build: .
-    container_name: ${ACCOUNT_HOST}
+    container_name: account_container
     hostname: ${ACCOUNT_HOST}
     image: ${ACCOUNT_HOST}
     ports:
@@ -90,7 +90,7 @@ services:
 
   celery-worker:
     build: .
-    container_name: celery-worker-container
+    container_name: celery_worker_container
     hostname: celery_worker
     command: bash -c " celery -A config worker -l info "
     restart: on-failure
