@@ -1,5 +1,7 @@
 import re
 import pytz
+import hashlib
+from django.conf import settings
 from datetime import datetime, timedelta
 from rest_framework import serializers
 from .keycloak.service import UserKeyCloak, TokenKeycloak
@@ -94,11 +96,13 @@ class OTPSigninSerializer(serializers.Serializer):
         if not phone and not email:
             raise serializers.ValidationError({'message':'username is not correct'}, code=400)
         if count > 5:
+            self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'otp is expired'}, code=410)
-        if time_delta > now_time:
+        if time_delta < now_time:
+            self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
-        if otp != attrs['otp'] and username != attrs['username']:
-            raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
+        if otp != hashlib.sha256(f"{attrs['otp']}+{settings.SECRET_KEY}".encode('utf-8')) and username != attrs['username']:
+            self.context['request'].session.flush()
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'please first verified username'}, code=400)
         if user.check_enable() == 404:
@@ -126,10 +130,13 @@ class OTPPasswordChangeVerifySerializer(OTPSigninSerializer):
         if not phone and not email:
             raise serializers.ValidationError({'message':'username is not correct'}, code=400)
         if count > 5:
+            self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'otp is expired'}, code=410)
         if time_delta < now_time:
+            self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
-        if otp != attrs['otp'] and username != attrs['username']:
+        if otp != hashlib.sha256(f"{attrs['otp']}+{settings.SECRET_KEY}".encode('utf-8')) and username != attrs['username']:
+            self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'user befor verified'}, code=400)
@@ -218,14 +225,20 @@ class PasswordSinginSerializer(serializers.Serializer):
     
 
 
-class SignoutSerializer(serializers.Serializer):
+class TokenBaseSerializer(serializers.Serializer):
+    def create(self, validated_data):
+        keycloak = TokenKeycloak()
+        if keycloak.check_connect() == 500:
+            raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
+        return validated_data
+
+
+class SignoutSerializer(TokenBaseSerializer):
     refresh_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
+        super().create(validated_data)
         logout = TokenKeycloak()
-        if logout.check_connect() == 500:
-            raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
-
         logout.token = validated_data['refresh_token']
         signout_result = logout.signout()
         if signout_result == 404:
@@ -237,10 +250,8 @@ class UserInfoSerializer(serializers.Serializer):
     access_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
+        super().create(validated_data)
         information = TokenKeycloak()
-        if information.check_connect() == 500:
-            raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
-
         information.token = validated_data['access_token']
         user_info = information.user_info()
         if user_info == 404:
@@ -252,10 +263,8 @@ class RefreshTokenSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
+        super().create(validated_data)
         refresh_token = TokenKeycloak()
-        if refresh_token.check_connect() == 500:
-            raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
-
         refresh_token.token = validated_data['refresh_token']
         refresh_token = refresh_token.refresh_token()
         if refresh_token == 404:
@@ -267,10 +276,8 @@ class DecodeTokenSerializer(serializers.Serializer):
     access_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
+        super().create(validated_data)
         decode_token = TokenKeycloak()
-        if decode_token.check_connect() == 500:
-            raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
-
         decode_token.token = validated_data['access_token']
         information = decode_token.decode_token()
         if information == 404:

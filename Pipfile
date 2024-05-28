@@ -11,6 +11,7 @@ python-keycloak = "*"
 pytz = "*"
 python-decouple = "*"
 celery = "*"
+redis = "*"
 
 [dev-packages]
 

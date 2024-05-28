@@ -1,15 +1,53 @@
 version : '3.9'
 
 services:
+  postgres:
+    image: postgres
+    hostname: ${POSTGRES_HOST}
+    container_name: ${POSTGRES_HOST}
+    command: -p ${POSTGRES_PORT}
+    restart: on-failure
+    environment: 
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes: 
+      - ./data/postgres:/var/lib/postgresql/data 
+    networks: 
+      - account_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: on-failure
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - postgres
+    ports:
+      - "80:80"
+    volumes:
+      - ./data/pgadmin:/var/lib/pgadmin/data
+    networks:
+      - account_network
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.3
-    container_name: keycloak
+    hostname: ${KEYCLOAK_HOST}
+    container_name: ${KEYCLOAK_HOST}
     command: start-dev
     environment:
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres/${POSTGRES_DB}
+      - KC_DB_USERNAME=${POSTGRES_USER}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
     volumes:
-      - ./keycloak-data:/opt/keycloak/data
+      - ./data/keycloak-data:/opt/keycloak/data
     ports:
       - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
     networks:

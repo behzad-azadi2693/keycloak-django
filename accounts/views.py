@@ -1,4 +1,6 @@
 import pytz
+import hashlib
+from django.conf import settings
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -58,7 +60,7 @@ class OTPRequestView(APIView):
         print('=================', otp)
         serializer = self.serializer_class(data=request.data, context={'otp':otp})
         if serializer.is_valid():
-            request.session['OTP_ITS'] = otp
+            request.session['OTP_ITS'] = hashlib.sha256(f"{otp}+{settings.SECRET_KEY}".encode('utf-8'))
             request.session['OTP_ITS_TIME'] = datetime.now().astimezone(pytz.timezone('Asia/Tehran')).isoformat()
             request.session['OTP_ITS_COUNT'] = 0
             request.session['ITS_USERNAME'] = serializer.data['username']

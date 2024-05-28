@@ -113,9 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fa-ir'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
@@ -132,7 +132,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+#KEYCLOAK
 KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF = "is_staff"
 
 
@@ -144,7 +144,7 @@ KEYCLOAK_USER_REALM_NAME=config("KEYCLOAK_USER_REALM_NAME", cast=str)
 KEYCLOAK_USERNAME=config("KEYCLOAK_USERNAME", cast=str)
 KEYCLOAK_PASSWORD=config("KEYCLOAK_PASSWORD", cast=str)
 
-
+#REST
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'accounts.authentication.KeycloakAuthentication',
@@ -153,6 +153,7 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+#CORS
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
@@ -164,9 +165,22 @@ CORS_ALLOW_METHODS = (
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+
+#CELERY
 CELERY_BROKER_URL = f'redis://{config('REDIS_HOST')}:{config('REDIS_PORT')}/1'
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'  # Set to your preferred timezone
+CELERY_TIMEZONE = 'Asia/Tehran' 
+
+
+#EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.example.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your_email@example.com'
+EMAIL_HOST_PASSWORD = 'your_password'
+
+
