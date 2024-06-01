@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
         SignupView, OTPSingnupVerifyView, OTPRequestView,
         PasswordSigninView, PasswordChangeView, OTPPasswordChangeVerifyView,
-        SignoutView, UserinfoView, RefreshTokenView, DecodeTokenView
+        SignoutView, UserinfoView, RefreshTokenView, DecodeTokenView,
+        #TestView
     )
 
 
@@ -18,6 +19,6 @@ urlpatterns = [
     path('refresh/token/', RefreshTokenView.as_view()),
     path('decode/token/', DecodeTokenView.as_view()),
 
-   # path('index/', TestView.as_view()),
+    # path('index/', TestView.as_view()),
 ]
 

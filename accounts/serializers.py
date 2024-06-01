@@ -4,7 +4,7 @@ import bcrypt
 from django.conf import settings
 from datetime import datetime, timedelta
 from rest_framework import serializers
-from .keycloak.service import UserKeyCloak, TokenKeycloak
+from .service import UserKeyCloak, TokenKeycloak
 from django.utils.timezone import make_naive
 from .tasks import otp_email_sender, otp_phone_sender
 

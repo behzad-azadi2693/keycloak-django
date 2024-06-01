@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import pyotp
+import os
 from pathlib import Path
 from decouple import config
-import pyotp
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -126,6 +127,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -135,7 +137,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #KEYCLOAK
 KEYCLOAK_ROLES_TO_DJANGO_IS_STAFF = "is_staff"
 
-
 KEYCLOAK_SERVER_URL=config("KEYCLOAK_SERVER_URL", cast=str)
 KEYCLOAK_CLIENT_ID=config("KEYCLOAK_CLIENT_ID", cast=str)
 KEYCLOAK_REALM_NAME=config("KEYCLOAK_REALM_NAME", cast=str)
@@ -143,6 +144,7 @@ KEYCLOAK_CLIENT_SECRET_KEY=config("KEYCLOAK_CLIENT_SECRET_KEY", cast=str)
 KEYCLOAK_USER_REALM_NAME=config("KEYCLOAK_USER_REALM_NAME", cast=str)
 KEYCLOAK_USERNAME=config("KEYCLOAK_USERNAME", cast=str)
 KEYCLOAK_PASSWORD=config("KEYCLOAK_PASSWORD", cast=str)
+
 
 #REST
 REST_FRAMEWORK = {

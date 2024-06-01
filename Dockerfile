@@ -9,8 +9,7 @@ WORKDIR /accounts
 COPY . /accounts/
 
 RUN pip install --upgrade pip 
-RUN pip install pipenv
-RUN pipenv install 
+RUN pip install -r requirements.txt 
 
 ARG DJANGO_PORT
 ENV DJANGO_PORT=${DJANGO_PORT}

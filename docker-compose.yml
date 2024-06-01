@@ -1,58 +1,6 @@
 version : '3.9'
 
 services:
-  postgres:
-    image: postgres
-    hostname: ${POSTGRES_HOST}
-    container_name: postgres_container
-    command: -p ${POSTGRES_PORT}
-    restart: on-failure
-    environment: 
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes: 
-      - ./data/postgres:/var/lib/postgresql/data 
-    networks: 
-      - account_network
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    restart: on-failure
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
-    depends_on:
-      - postgres
-    ports:
-      - "80:80"
-    volumes:
-      - ./data/pgadmin:/var/lib/pgadmin/data
-    networks:
-      - account_network
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:24.0.3
-    hostname: ${KEYCLOAK_HOST}
-    container_name: keycloak_container
-    command: start-dev
-    environment:
-      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
-      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres/${POSTGRES_DB}
-      - KC_DB_USERNAME=${POSTGRES_USER}
-      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
-    depends_on:
-      - postgres
-    volumes:
-      - ./data/keycloak-data:/opt/keycloak/data
-    ports:
-      - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
-    networks:
-      - account_network
-
   redis:
     image: redis
     hostname: ${REDIS_HOST}
@@ -83,10 +31,15 @@ services:
                     gunicorn -k gevent --workers 4 config.wsgi:application -b 0.0.0.0:${DJANGO_PORT}"
     depends_on:
       - redis
+      - keycloak
+      - postgres
+    env_file:
+      - .env
     links: 
       - redis
     networks:
       - account_network
+      - keycloak_network
 
   celery-worker:
     build: .
@@ -108,3 +61,5 @@ services:
 
 networks:
   account_network:
+  keycloak_network:
+    external: true

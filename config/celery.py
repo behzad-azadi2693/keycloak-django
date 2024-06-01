@@ -6,11 +6,11 @@ from celery import Celery
 if not settings.configured:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', "config.settings.") 
 
-APP = Celery('config')
+APP = Celery('celery')
 
 
 class CeleryConfig(AppConfig):
-    name = 'config'
+    name = 'celery'
     verbose_name = 'Celery Config'
 
     def ready(self):

@@ -44,7 +44,6 @@ class BaseKeyCloak:
 
     def admin_connect(self):
         try:    
-            print(settings.KEYCLOAK_SERVER_URL)
             keycloak_connection = KeycloakOpenIDConnection(
                 server_url=settings.KEYCLOAK_SERVER_URL,
                 username=settings.KEYCLOAK_USERNAME,
@@ -55,7 +54,7 @@ class BaseKeyCloak:
                 client_secret_key=settings.KEYCLOAK_CLIENT_SECRET_KEY,
                 verify=True
             )
-            
+
             keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
             return keycloak_admin
         except Exception as e:

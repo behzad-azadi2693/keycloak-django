@@ -177,33 +177,10 @@ class DecodeTokenView(APIView):
             return Response(serializer.errors, status=400)
         
 '''
-
-class OTPSigninView(APIView):
-    serializer_class = OTPSigninSerializer
-
-    @extend_schema(request=OTPSigninSerializer)
-    def post(self, request):
-        context = {
-            'otp': request.session.get('OTP_ITS'),
-            'time':  request.session.get('OTP_ITS_TIME'),
-            'count':  request.session.get('OTP_ITS_COUNT'),
-            'username':  request.session.get('ITS_USERNAME'),
-            'request': request
-        }
-        serializer = self.serializer_class(data=request.data, context=context)
-        if serializer.is_valid():
-            """
-            back token
-            """
-            return Response({}, status=200)
-        else:
-            return Response(serializer.errors, status=400)
-
-
 class TestView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response({'msg': 'request'} , status=200)
+        return Response({'msg': f'{request.user.username}'} , status=200)
 '''
