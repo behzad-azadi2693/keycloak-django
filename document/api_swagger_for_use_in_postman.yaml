@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /decode/token/:
+    post:
+      operationId: decode_token_create
+      tags:
+      - decode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecodeToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecodeToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecodeToken'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecodeToken'
+          description: ''
+  /password/change/:
+    post:
+      operationId: password_change_create
+      tags:
+      - password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordChange'
+          description: ''
+  /password/otp/verify/:
+    post:
+      operationId: password_otp_verify_create
+      tags:
+      - password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPPasswordChangeVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPPasswordChangeVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPPasswordChangeVerify'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPPasswordChangeVerify'
+          description: ''
+  /refresh/token/:
+    post:
+      operationId: refresh_token_create
+      tags:
+      - refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshToken'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshToken'
+          description: ''
+  /request/otp/:
+    post:
+      operationId: request_otp_create
+      tags:
+      - request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPRequestSeriailizer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPRequestSeriailizer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPRequestSeriailizer'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPRequestSeriailizer'
+          description: ''
+  /signin/password/:
+    post:
+      operationId: signin_password_create
+      tags:
+      - signin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordSingin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordSingin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordSingin'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordSingin'
+          description: ''
+  /signout/:
+    post:
+      operationId: signout_create
+      tags:
+      - signout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Signout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Signout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Signout'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signout'
+          description: ''
+  /signup/:
+    post:
+      operationId: signup_create
+      tags:
+      - signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Signup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Signup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Signup'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Signup'
+          description: ''
+  /signup/otp/verify/:
+    post:
+      operationId: signup_otp_verify_create
+      tags:
+      - signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPSingnupVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPSingnupVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPSingnupVerify'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPSingnupVerify'
+          description: ''
+  /user/information/:
+    post:
+      operationId: user_information_create
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+          description: ''
+components:
+  schemas:
+    DecodeToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+      required:
+      - access_token
+    OTPPasswordChangeVerify:
+      type: object
+      properties:
+        username:
+          type: string
+        otp:
+          type: integer
+      required:
+      - otp
+      - username
+    OTPRequestSeriailizer:
+      type: object
+      properties:
+        username:
+          type: string
+      required:
+      - username
+    OTPSingnupVerify:
+      type: object
+      properties:
+        username:
+          type: string
+        otp:
+          type: integer
+      required:
+      - otp
+      - username
+    PasswordChange:
+      type: object
+      properties:
+        password:
+          type: string
+        password2:
+          type: string
+      required:
+      - password
+      - password2
+    PasswordSingin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - username
+    RefreshToken:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    Signout:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+      required:
+      - refresh_token
+    Signup:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        password2:
+          type: string
+      required:
+      - password
+      - password2
+      - username
+    UserInfo:
+      type: object
+      properties:
+        access_token:
+          type: string
+      required:
+      - access_token
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

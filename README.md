@@ -1,6 +1,5 @@
 run service django 
 
-
 first ensure install docker, docker compose and nginx and read README.md in keycloak directory for up service keycloak
 
 1- Create a .env file with the following environment variables in this directory:

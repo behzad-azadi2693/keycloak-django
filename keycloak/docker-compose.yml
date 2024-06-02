@@ -59,3 +59,5 @@ services:
 
 networks:
   keycloak_network:
+    driver: bridge
+    name: keycloak_network

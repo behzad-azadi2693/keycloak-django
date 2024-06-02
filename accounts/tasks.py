@@ -1,15 +1,15 @@
-from config.celery import APP
+from celery import shared_task
 from utils import OTPSender
 
 
-@APP.task()
+@shared_task
 def otp_email_sender(otp, email):
     sender = OTPSender(otp)
     sender.email = email
     sender.email_sender()
 
 
-@APP.task()
+@shared_task
 def otp_phone_sender(otp, phone):
     sender = OTPSender(otp)
     sender.email = phone
