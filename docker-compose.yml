@@ -4,14 +4,12 @@ services:
   redis:
     image: redis
     hostname: ${REDIS_HOST}
-    container_name: redis_container
+    container_name: ${REDIS_HOST}
     command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
     restart: on-failure
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: ${REDIS_PORT}
-    expose:
-      - ${REDIS_PORT}
     volumes:
       - ./redis.conf:/usr/local/etc/redis.conf
     networks:
@@ -45,8 +43,11 @@ services:
     build: .
     image: celery_account_image
     container_name: celery_account_container
-    hostname: ${REDIS_HOST}
+    hostname: celery_account
     command: bash -c " celery -A config worker -l info "
+    environment:
+      - BROKER_URL=redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0
+      - RESULT_BACKEND=redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0
     restart: on-failure
     depends_on:
       - accounts
@@ -59,7 +60,6 @@ services:
 
 networks:
   account_network:
-    driver: bridge
 
   keycloak_network:
     external: true

@@ -169,7 +169,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 #CELERY
-CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD', cast=str)}@{config('REDIS_HOST', cast=str)}:{config('REDIS_PORT', cast=int)}/0"
+CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD')}@{config('REDIS_HOST')}:{config('REDIS_PORT')}/0"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
