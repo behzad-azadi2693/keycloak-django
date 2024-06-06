@@ -4,7 +4,7 @@ services:
   redis:
     image: redis
     hostname: ${REDIS_HOST}
-    container_name: ${REDIS_HOST}
+    container_name: redis_account
     command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
     restart: on-failure
     environment:

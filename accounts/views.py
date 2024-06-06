@@ -18,6 +18,9 @@ from .serializers import (
 
 
 class SignupView(APIView):
+    """
+    register user with username and password in to sso
+    """
     serializer_class = SignupSerializer
 
     @extend_schema(request=SignupSerializer)
@@ -31,6 +34,9 @@ class SignupView(APIView):
 
 
 class OTPSingnupVerifyView(APIView):
+    """
+    verify username with otp 
+    """
     serializer_class = OTPSingnupVerifySerializer
 
     @extend_schema(request=OTPSingnupVerifySerializer)
@@ -52,6 +58,11 @@ class OTPSingnupVerifyView(APIView):
 
 
 class OTPRequestView(APIView):
+    """
+    - send otp for user - this view use for verify username 
+    - change password and etc 
+    - everywhen need to send otp for username 
+    """
     serializer_class = OTPRequestSeriailizer
 
     @extend_schema(request=OTPRequestSeriailizer)
@@ -70,6 +81,9 @@ class OTPRequestView(APIView):
 
 
 class OTPPasswordChangeVerifyView(APIView):
+    """
+    befor change password user need to verify otp and set accessiblity in session 
+    """
     serializer_class = OTPPasswordChangeVerifySerializer
 
     @extend_schema(request=OTPPasswordChangeVerifySerializer)
@@ -94,6 +108,10 @@ class OTPPasswordChangeVerifyView(APIView):
 
 
 class PasswordChangeView(APIView):
+    """
+    - change password with send new password 
+    - accesseblity check in session
+    """
     serializer_class = PasswordChangeSerializer
 
     @extend_schema(request=PasswordChangeSerializer)
@@ -113,6 +131,9 @@ class PasswordChangeView(APIView):
         
 
 class PasswordSigninView(APIView):
+    """
+    login user and get token access and refresh  
+    """
     serializer_class = PasswordSinginSerializer
 
     @extend_schema(request=PasswordSinginSerializer)
@@ -126,6 +147,9 @@ class PasswordSigninView(APIView):
 
 
 class SignoutView(APIView):
+    """
+    remove and delete token refresh from system for logout user
+    """
     serializer_class = SignoutSerializer
 
     @extend_schema(request=SignoutSerializer)
@@ -139,6 +163,9 @@ class SignoutView(APIView):
         
 
 class UserinfoView(APIView):
+    """
+    get user info from keycloak for authorizations
+    """
     serializer_class = UserInfoSerializer
 
     @extend_schema(request=UserInfoSerializer)
@@ -152,6 +179,9 @@ class UserinfoView(APIView):
         
 
 class RefreshTokenView(APIView):
+    """
+    get and update token access 
+    """
     serializer_class = RefreshTokenSerializer
 
     @extend_schema(request=RefreshTokenSerializer)
@@ -165,6 +195,9 @@ class RefreshTokenView(APIView):
         
 
 class DecodeTokenView(APIView):
+    """
+    get information comlete about token and user
+    """
     serializer_class = DecodeTokenSerializer
 
     @extend_schema(request=DecodeTokenSerializer)

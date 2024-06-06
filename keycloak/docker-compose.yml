@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres
     hostname: ${POSTGRES_HOST}
-    container_name: postgres_container
+    container_name: postgres_keycloak
     restart: on-failure
     environment: 
       - POSTGRES_DB=${POSTGRES_DB}
@@ -14,26 +14,13 @@ services:
       - .env
     expose:
       - ${POSTGRES_PORT}
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
     volumes: 
       - ./data/postgres:/var/lib/postgresql/data 
     networks: 
       - keycloak_network
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    restart: on-failure
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
-    depends_on:
-      - postgres
-    ports:
-      - "80:80"
-    volumes:
-      - ./data/pgadmin:/var/lib/pgadmin/data
-    networks:
-      - keycloak_network
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.3
