@@ -277,7 +277,7 @@ class SignoutSerializer(TokenBaseSerializer):
         return validated_data['refresh_token']
     
 
-class UserInfoSerializer(serializers.Serializer):
+class UserInfoSerializer(TokenBaseSerializer):
     access_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
@@ -290,7 +290,7 @@ class UserInfoSerializer(serializers.Serializer):
         return user_info
     
 
-class RefreshTokenSerializer(serializers.Serializer):
+class RefreshTokenSerializer(TokenBaseSerializer):
     refresh_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
@@ -303,7 +303,7 @@ class RefreshTokenSerializer(serializers.Serializer):
         return refresh_token
     
 
-class DecodeTokenSerializer(serializers.Serializer):
+class DecodeTokenSerializer(TokenBaseSerializer):
     access_token = serializers.CharField(required=True)
 
     def create(self, validated_data):
