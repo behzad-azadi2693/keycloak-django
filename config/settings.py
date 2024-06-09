@@ -177,7 +177,6 @@ SWAGGER_SETTINGS = {
     },
 }
 
-
 SPECTACULAR_SETTINGS = {
     'SCHEMA_PATH_PREFIX': r'/api/v1',
     'DEFAULT_GENERATOR_CLASS': 'drf_spectacular.generators.SchemaGenerator',
@@ -191,17 +190,17 @@ SPECTACULAR_SETTINGS = {
         "displayRequestDuration": True
     },
     'UPLOADED_FILES_USE_URL': True,
-    'TITLE': 'Custom Authentication API',
-    'DESCRIPTION': 'Handling Custome Authentication Api',
+    'TITLE': 'User manage Service API',
+    'DESCRIPTION': 'Handling user manage endpoint Api',
     'VERSION': '0.2.0',
     'LICENCE': {'name': 'BSD License'},
-    'CONTACT': {'name': 'Ridwanray', 'email': 'alabarise@gmail.com'},
-    #OAUTH2 SPEC
-    'OAUTH2_FLOWS': [],
-    'OAUTH2_AUTHORIZATION_URL': None,
-    'OAUTH2_TOKEN_URL': None,
-    'OAUTH2_REFRESH_URL': None,
-    'OAUTH2_SCOPES': None,
+    'CONTACT': {'name': 'behzad-azadi', 'url': 'https://github.com/behzad-azadi2693'},
+    #keycloak SPEC
+    'SECURITY': [{
+        'name': 'Bearer',
+        'scheme': 'bearer',
+        'bearerFormat': 'JWT',
+    }],
 }
 
 
@@ -236,7 +235,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'your_app_name': {
+        'user_manage': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
