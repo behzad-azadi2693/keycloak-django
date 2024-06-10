@@ -18,7 +18,7 @@ services:
 
   accounts:
     build: .
-    image: accouns_service_image
+    image: accounts_service_image
     container_name: account_container
     hostname: ${ACCOUNT_HOST}
     restart: on-failure

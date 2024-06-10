@@ -1,5 +1,4 @@
 venv/
-user_service
 __pycache__/
 00*
 db*
