@@ -39,6 +39,7 @@ class KeycloakAuthentication(BaseAuthentication):
                     self.email = user_info.get('email')
                     self.first_name = user_info.get('given_name')
                     self.last_name = user_info.get('family_name')
+                    self.permissions = user_info['realm_access']['roles']
 
                 def is_authenticated(self):
                     return True
