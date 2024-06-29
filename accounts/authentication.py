@@ -25,7 +25,7 @@ class KeycloakAuthentication(BaseAuthentication):
 
         try:
             # Decode token to get user information
-            user_info = keycloak_openid.userinfo(token)
+            user_info = keycloak_openid.userinfo(token) 
             if not user_info:
                 logging.error("No user information found in token")
                 return None

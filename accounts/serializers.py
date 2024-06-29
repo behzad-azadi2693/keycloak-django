@@ -250,7 +250,7 @@ class PasswordSinginSerializer(serializers.Serializer):
         token.username = validated_data['username']
         token.password = validated_data['password']
         token_info = token.get_token()
-        if token_info == 500:
+        if token_info in [404, 500]:
             raise serializers.ValidationError({'message': 'service authentications error'}, code=500)
         return token_info
     
@@ -298,7 +298,7 @@ class RefreshTokenSerializer(TokenBaseSerializer):
         refresh_token = TokenKeycloak()
         refresh_token.token = validated_data['refresh_token']
         refresh_token = refresh_token.refresh_token()
-        if refresh_token == 404:
+        if refresh_token in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return refresh_token
     
@@ -311,6 +311,6 @@ class DecodeTokenSerializer(TokenBaseSerializer):
         decode_token = TokenKeycloak()
         decode_token.token = validated_data['access_token']
         information = decode_token.decode_token()
-        if information == 404:
+        if information in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return information
