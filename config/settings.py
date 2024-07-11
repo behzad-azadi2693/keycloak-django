@@ -33,7 +33,7 @@ if DEBUG:
 else:
     ALLOWED_HOSTS = list(config('ALLOWED_HOSTS', default='*', cast=list))
 
-CSRF_TRUSTED_ORIGINS = [f"https://{config('WEB_DOMAIN')}", f"http://{config('WEB_DOMAIN')}", 'http://127.0.0.1', 'http://localhost']
+CSRF_TRUSTED_ORIGINS = [f"https://{config('WEB_DOMAIN')}", f"http://{config('WEB_DOMAIN')}", 'http://127.0.0.1', 'http://localhost', f"http://{config('ACCOUNT_HOST')}"]
 
 # Application definition
 

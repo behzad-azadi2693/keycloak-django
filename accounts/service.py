@@ -2,7 +2,7 @@ import logging
 from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from django.conf import settings
 from keycloak import KeycloakOpenID
-
+from functools import cache
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +16,7 @@ class BaseKeyCloak:
     STATUS_FORBIDDEN = 403
     STATUS_SERVER_ERROR = 500
 
+    @cache
     def __init__(self):
         self._username = None
         self._password = None
@@ -23,25 +24,30 @@ class BaseKeyCloak:
         self.keycloak_openid = self.openid_connect()
 
     @property
+    @cache
     def username(self):
         return self._username
 
     @username.setter
+    @cache
     def username(self, value):
         if not value:
             raise ValueError('username cannot be empty')
         self._username = value
 
     @property
+    @cache
     def password(self):
         return self._password
 
     @password.setter
+    @cache
     def password(self, value):
         if not value:
             raise ValueError('password cannot be empty')
         self._password = value
 
+    @cache
     def admin_connect(self):
         try:    
             keycloak_connection = KeycloakOpenIDConnection(
@@ -61,6 +67,7 @@ class BaseKeyCloak:
             logging.error(f"Error connecting to Keycloak: {e}")
             return None
 
+    @cache
     def openid_connect(self):
         try:
             keycloak_openid = KeycloakOpenID(
@@ -75,6 +82,7 @@ class BaseKeyCloak:
             logging.error(f"Error connecting to Keycloak: {e}")
             return self.STATUS_SERVER_ERROR
         
+    @cache
     def check_connect(self):
         try:
             self.keycloak_admin.get_realms()
@@ -86,6 +94,7 @@ class BaseKeyCloak:
 
 class UserKeyCloak(BaseKeyCloak):
 
+    @cache
     def get_user_id(self):
         user_id = self.keycloak_admin.get_user_id(self.username)
         if user_id is not None:
@@ -93,6 +102,7 @@ class UserKeyCloak(BaseKeyCloak):
         else:
             return self.STATUS_NOT_FOUND
 
+    @cache
     def get_user(self):
         user_id = self.get_user_id()
         if user_id == self.STATUS_NOT_FOUND:
@@ -104,6 +114,7 @@ class UserKeyCloak(BaseKeyCloak):
             logging.error(f"Error getting user: {e}")
             return self.STATUS_NOT_FOUND
 
+    @cache
     def check_enable(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:
@@ -113,6 +124,7 @@ class UserKeyCloak(BaseKeyCloak):
         else:
             return self.STATUS_NOT_FOUND
         
+    @cache
     def check_email_verify(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:
@@ -122,6 +134,7 @@ class UserKeyCloak(BaseKeyCloak):
         else:
             return self.STATUS_NOT_FOUND
 
+    @cache
     def create_email(self):
         user_id = self.get_user_id()
         if user_id == self.STATUS_NOT_FOUND:
@@ -154,6 +167,7 @@ class UserKeyCloak(BaseKeyCloak):
                 logging.error(f"Error setting user password: {e}")
                 return self.STATUS_NOT_FOUND
 
+    @cache
     def create_phone(self):
         user_id = self.get_user_id()
         if user_id == self.STATUS_NOT_FOUND:
@@ -186,6 +200,7 @@ class UserKeyCloak(BaseKeyCloak):
                 logging.error(f"Error setting user password: {e}")
                 return self.STATUS_NOT_FOUND
 
+    @cache
     def enable(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:
@@ -199,6 +214,7 @@ class UserKeyCloak(BaseKeyCloak):
                 logging.error(f"Error enabling user: {e}")
                 return self.STATUS_NOT_FOUND
 
+    @cache
     def disable(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:
@@ -212,6 +228,7 @@ class UserKeyCloak(BaseKeyCloak):
                 logging.error(f"Error disabling user: {e}")
                 return self.STATUS_NOT_FOUND
 
+    @cache
     def email_verified(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:
@@ -224,6 +241,7 @@ class UserKeyCloak(BaseKeyCloak):
             logging.error(f"Error updating email verification status: {e}")
             return self.STATUS_NOT_FOUND
 
+    @cache
     def change_password(self):
         user_id = self.get_user_id()
         if user_id == self.STATUS_NOT_FOUND:
@@ -238,21 +256,25 @@ class UserKeyCloak(BaseKeyCloak):
 
 
 class TokenKeycloak(BaseKeyCloak):
+    @cache
     def __init__(self):
         super().__init__()
         self._token = None
 
     @property
+    @cache
     def token(self):
         return self._token
 
     @token.setter
+    @cache
     def token(self, value):
         if not value:
             raise ValueError('username cannot be empty')
         self._token = value
 
 
+    @cache
     def get_token(self):
         try:
             token = self.keycloak_openid.token(self.username, self.password)
@@ -261,6 +283,7 @@ class TokenKeycloak(BaseKeyCloak):
             logging.error(f"Error for get user token: {e}")
             return self.STATUS_SERVER_ERROR
 
+    @cache
     def refresh_token(self):
         try:
             token = self.keycloak_openid.refresh_token(self.token)
@@ -269,6 +292,7 @@ class TokenKeycloak(BaseKeyCloak):
             logging.error(f"refresh token error: {e}")
             return self.STATUS_SERVER_ERROR
              
+    @cache
     def decode_token(self):
         try:
             token_info = self.keycloak_openid.decode_token(self.token)
@@ -277,6 +301,7 @@ class TokenKeycloak(BaseKeyCloak):
             logging.error(f"decode token error: {e}")
             return self.STATUS_SERVER_ERROR
 
+    @cache
     def user_info(self):
         try:
             userinfo = self.keycloak_openid.userinfo(self.token)
@@ -285,6 +310,7 @@ class TokenKeycloak(BaseKeyCloak):
             logging.error(f"user information error: {e}")
             return self.STATUS_NOT_FOUND           
 
+    @cache
     def signout(self):
         try:
             self.keycloak_openid.logout(self.token)
