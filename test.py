@@ -1,19 +1,19 @@
-from keycloak import KeycloakOpenID
+from keycloak import KeycloakOpenIDConnection, KeycloakAdmin
 
 # Configure client
-keycloak_openid = KeycloakOpenID(server_url="http://keycloak:8080/auth",
-                                 client_id="test",
-                                 realm_name="test",
-                                 client_secret_key="gO7miByBsqTmZ07OsUbKORaaFMoSss5m")
+keycloak_connection = KeycloakOpenIDConnection(
+                        server_url="http://192.168.100.53:8080/",
+                        username='test',
+                        password='test',
+                        realm_name="test",
+                        user_realm_name="test",
+                        client_id="test",
+                        client_secret_key="frrbAeNm7ZlmR9DQsYc2w8I97eb366NH",
+                        verify=False)
 
-# Get WellKnown
-config_well_known = keycloak_openid.well_known()
+keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
 
+users = keycloak_admin.get_users({'username':'test1', 'email':'tes2'})
 
-# Get Access Token With Code
-token = keycloak_openid.token("test", "test")
-print(token['access_token'])
-
-userinfo = keycloak_openid.userinfo(token['access_token'])
-print()
-print(userinfo)
+import json
+print(json.dumps(users, indent=4))

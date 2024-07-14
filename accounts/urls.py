@@ -5,6 +5,10 @@ from .views import (
         SignoutView, UserinfoView, RefreshTokenView, DecodeTokenView,
         #TestView
     )
+from .panel import (
+        UserListView, UserDisableView, UserEnableView,
+        EmailUserVerifyView, SearchUserView
+    )
 
 
 urlpatterns = [
@@ -20,5 +24,10 @@ urlpatterns = [
     path('decode/token/', DecodeTokenView.as_view()),
 
     # path('index/', TestView.as_view()),
+    path('panel/list/users/', UserListView.as_view()),
+    path('panel/disable/users/', UserDisableView.as_view()),
+    path('panel/enable/users/', UserEnableView.as_view()),
+    path('panel/email/verify/', EmailUserVerifyView.as_view()),
+    path('panel/search/user/', SearchUserView.as_view()),
 ]
 

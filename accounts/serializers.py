@@ -255,7 +255,6 @@ class PasswordSinginSerializer(serializers.Serializer):
         return token_info
     
 
-
 class TokenBaseSerializer(serializers.Serializer):
     def create(self, validated_data):
         keycloak = TokenKeycloak()
@@ -275,7 +274,7 @@ class SignoutSerializer(TokenBaseSerializer):
         if signout_result == 404:
             raise serializers.ValidationError({'message': 'token dos not validate'}, code=500)
         return validated_data['refresh_token']
-    
+
 
 class UserInfoSerializer(TokenBaseSerializer):
     access_token = serializers.CharField(required=True)
@@ -288,7 +287,7 @@ class UserInfoSerializer(TokenBaseSerializer):
         if user_info == 404:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return user_info
-    
+
 
 class RefreshTokenSerializer(TokenBaseSerializer):
     refresh_token = serializers.CharField(required=True)
@@ -301,7 +300,7 @@ class RefreshTokenSerializer(TokenBaseSerializer):
         if refresh_token in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return refresh_token
-    
+
 
 class DecodeTokenSerializer(TokenBaseSerializer):
     access_token = serializers.CharField(required=True)
@@ -314,3 +313,17 @@ class DecodeTokenSerializer(TokenBaseSerializer):
         if information in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return information
+
+
+class UsersSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    username = serializers.CharField()
+    firstName = serializers.CharField()
+    lastName = serializers.CharField()
+    email = serializers.EmailField()
+    emailVerified = serializers.BooleanField()
+    enabled = serializers.BooleanField()
+
+
+class PanelSerializer(serializers.Serializer):
+    username = serializers.CharField()

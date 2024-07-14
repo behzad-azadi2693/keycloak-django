@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from .authentication import KeycloakAuthentication
 from rest_framework.response import Response
 from random import randint
+from .permissions import IsAdminUser
 from drf_spectacular.utils import extend_schema
 from .serializers import (
         SignupSerializer, OTPSingnupVerifySerializer, OTPRequestSeriailizer,
