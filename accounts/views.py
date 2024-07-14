@@ -4,11 +4,8 @@ from django.conf import settings
 from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .authentication import KeycloakAuthentication
 from rest_framework.response import Response
 from random import randint
-from .permissions import IsAdminUser
 from drf_spectacular.utils import extend_schema
 from .serializers import (
         SignupSerializer, OTPSingnupVerifySerializer, OTPRequestSeriailizer,
@@ -209,12 +206,3 @@ class DecodeTokenView(APIView):
             return Response(srz, status=200)
         else:
             return Response(serializer.errors, status=400)
-        
-'''
-class TestView(APIView):
-    authentication_classes = [KeycloakAuthentication]
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response({'msg': f'{request.user.username}'} , status=200)
-'''

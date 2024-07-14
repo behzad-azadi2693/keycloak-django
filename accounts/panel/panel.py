@@ -1,6 +1,6 @@
 from .serializers import UsersSerializer, PanelSerializer
-from .service import UserKeyCloak
-from accounts.authentication import KeycloakAuthentication
+from ..service import UserKeyCloak
+from config.authentication import KeycloakAuthentication
 from .permissions import IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.response import Response

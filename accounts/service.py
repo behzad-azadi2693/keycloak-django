@@ -19,6 +19,7 @@ class BaseKeyCloak:
     def __init__(self):
         self._username = None
         self._password = None
+        self._new_username = None
         self.keycloak_admin = self.admin_connect()
         self.keycloak_openid = self.openid_connect()
 
@@ -31,6 +32,16 @@ class BaseKeyCloak:
         if not value:
             raise ValueError('username cannot be empty')
         self._username = value
+
+    @property
+    def new_username(self):
+        return self._new_username
+
+    @username.setter
+    def new_username(self, value):
+        if not value:
+            raise ValueError('username cannot be empty')
+        self._new_username = value
 
     @property
     def password(self):
@@ -224,6 +235,30 @@ class UserKeyCloak(BaseKeyCloak):
             logging.error(f"Error updating email verification status: {e}")
             return self.STATUS_NOT_FOUND
     
+    def email_verified(self):
+        user = self.get_user()
+        if user == self.STATUS_NOT_FOUND:
+            return self.STATUS_NOT_FOUND
+        try:
+            user['emailVerified'] = True
+            self.keycloak_admin.update_user(user_id=user['id'], payload=user)
+            return self.STATUS_NO_CONTENT
+        except Exception as e:
+            logging.error(f"Error updating email verification status: {e}")
+            return self.STATUS_NOT_FOUND
+
+    def email_unverified(self):
+        user = self.get_user()
+        if user == self.STATUS_NOT_FOUND:
+            return self.STATUS_NOT_FOUND
+        try:
+            user['emailVerified'] = False
+            self.keycloak_admin.update_user(user_id=user['id'], payload=user)
+            return self.STATUS_NO_CONTENT
+        except Exception as e:
+            logging.error(f"Error updating email verification status: {e}")
+            return self.STATUS_NOT_FOUND
+        
     def change_password(self):
         user_id = self.get_user_id()
         if user_id == self.STATUS_NOT_FOUND:
@@ -236,6 +271,20 @@ class UserKeyCloak(BaseKeyCloak):
                 logging.error(f"Error creating user: {e}")
                 return self.STATUS_NOT_FOUND
 
+    def change_username(self):
+        user_id = self.get_user_id()
+        if user_id == self.STATUS_NOT_FOUND:
+            return self.STATUS_NOT_FOUND
+        else:
+            try:
+                user = self.get_user()
+                user['username'] = self.new_username
+                self.keycloak_admin.update_user(user_id=user_id, payload=user)
+                return self.STATUS_CREATED
+            except Exception as e:
+                logging.error(f"Error creating user: {e}")
+                return self.STATUS_NOT_FOUND
+            
     def list_users(self):
         users = self.keycloak_admin.get_users({})
         return users

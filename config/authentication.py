@@ -2,7 +2,7 @@ import logging
 from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from keycloak import KeycloakOpenID
-from .service import BaseKeyCloak
+
 
 class KeycloakAuthentication(BaseAuthentication):
     def authenticate(self, request):

@@ -152,7 +152,7 @@ KEYCLOAK_PASSWORD=config("KEYCLOAK_PASSWORD", cast=str)
 #RESTFRAMEWORK configure
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'accounts.authentication.KeycloakAuthentication',
+        'config.authentication.KeycloakAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

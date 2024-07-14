@@ -18,7 +18,7 @@ def valid_phone_email(username):
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
-    password2 = serializers.CharField(required=True)
+    password_confierm = serializers.CharField(required=True)
 
     def validate(self, attrs):
         user = UserKeyCloak()
@@ -27,9 +27,9 @@ class SignupSerializer(serializers.Serializer):
 
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
-        if user.check_email_verify() == 200:
+        if user.check_email_verify() == 200 or user.get_user() != 404:
             raise serializers.ValidationError('user exsits', code=403)
-        if attrs['password'] != attrs['password2']:
+        if attrs['password'] != attrs['password_confierm']:
             raise serializers.ValidationError('password not mached', code=401)
         if phone or email:
             return attrs
@@ -72,7 +72,7 @@ class OTPRequestSeriailizer(serializers.Serializer):
             otp_email_sender(attrs['otp'], email)
         '''
         return attrs
-    
+
 
 class OTPSigninSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
@@ -106,7 +106,7 @@ class OTPSigninSerializer(serializers.Serializer):
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
         return attrs
-    
+
 
 class OTPPasswordChangeVerifySerializer(OTPSigninSerializer):
     username = serializers.CharField(required=True)
@@ -184,7 +184,7 @@ class OTPSingnupVerifySerializer(serializers.Serializer):
 
 class PasswordChangeSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
-    password2 = serializers.CharField(required=True)
+    password_confierm = serializers.CharField(required=True)
 
     def validate(self, attrs):
         time, username, change =  self.context['time'], self.context['username'], self.context['change']
@@ -208,7 +208,7 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError({'message':'please first verified username'}, code=400)
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
-        if attrs['password'] != attrs['password2']:
+        if attrs['password'] != attrs['password_confierm']:
             raise serializers.ValidationError({'message': 'password not mached'}, code=401)
         return attrs
 
@@ -313,17 +313,3 @@ class DecodeTokenSerializer(TokenBaseSerializer):
         if information in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return information
-
-
-class UsersSerializer(serializers.Serializer):
-    id = serializers.CharField()
-    username = serializers.CharField()
-    firstName = serializers.CharField()
-    lastName = serializers.CharField()
-    email = serializers.EmailField()
-    emailVerified = serializers.BooleanField()
-    enabled = serializers.BooleanField()
-
-
-class PanelSerializer(serializers.Serializer):
-    username = serializers.CharField()
