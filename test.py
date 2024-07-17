@@ -13,7 +13,7 @@ keycloak_connection = KeycloakOpenIDConnection(
 
 keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
 
-users = keycloak_admin.get_user('6938746b-4d1b-40db-887a-80baa2a6895c')
+users = keycloak_admin.get_realm_role_members('admin')
 
 import json
 print(json.dumps(users, indent=4))

@@ -1,10 +1,15 @@
-from .serializers import UsersSerializer, PanelSerializer, CreateUserSerializer, UpdateUserSerializer
 from accounts.service import UserKeyCloak
 from config.authentication import KeycloakAuthentication
 from .permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from accounts.service import BaseKeyCloak
+from django.http import Http404
+from .serializers import (
+        UsersSerializer, PanelSerializer, CreateUserSerializer,
+        UpdateUserSerializer, UserMnagerSerializer
+    )
 
 class UserListView(APIView):
     authentication_classes = [KeycloakAuthentication]
@@ -104,3 +109,24 @@ class UpdateUserView(APIView):
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.errors, status=400)
+        
+
+class ListManagerView(APIView):
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAuthenticated]
+    seriailizer_class = UserMnagerSerializer
+
+    def get(self, request):
+        if 'admin' not in request.user.permissions:
+            raise Http404
+        try:
+            keycloak = BaseKeyCloak().keycloak_admin
+            users = [] 
+            users += keycloak.get_realm_role_members('admin')
+            users += keycloak.get_realm_role_members('support_financial')
+            users += keycloak.get_realm_role_members('support_technical')
+
+            serializer = self.seriailizer_class(users, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'message': 'please check keycloak connection'})

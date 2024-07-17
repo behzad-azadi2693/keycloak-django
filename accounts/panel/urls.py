@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
         UserListView, UserDisableView, UserEnableView,
         EmailUserVerifyView, SearchUserView, CreateUserView,
-        UpdateUserView
+        UpdateUserView, ListManagerView
         
     )
 
@@ -15,5 +15,6 @@ urlpatterns = [
     path('search/user/', SearchUserView.as_view()),
     path('create/user/', CreateUserView.as_view()),
     path('update/user/', UpdateUserView.as_view()),
+    path('list/manager/', ListManagerView.as_view()),
 ]
 

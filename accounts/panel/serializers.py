@@ -105,3 +105,11 @@ class UpdateUserSerializer(serializers.Serializer):
             user.change_username()
         
         return validated_data
+    
+
+class UserMnagerSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    username = serializers.CharField()
+    firstName = serializers.CharField()
+    lastName = serializers.CharField()
+    email = serializers.CharField()
