@@ -1,3 +1,5 @@
+import requests
+from django.conf import settings
 from accounts.service import UserKeyCloak
 from config.authentication import KeycloakAuthentication
 from .permissions import IsAdminUser
@@ -10,6 +12,30 @@ from .serializers import (
         UsersSerializer, PanelSerializer, CreateUserSerializer,
         UpdateUserSerializer, UserMnagerSerializer
     )
+
+
+def get_organization_model(request):
+    token = request.META.get('HTTP_AUTHORIZATION', '').split('Bearer ')[-1]
+    print(token)
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    print(headers)
+    # Send a request to the service with the authentication token
+    response = requests.get(f"{settings.INVOLVED_SERVICE_URL}v1/organization/information/", headers=headers)
+    return response
+
+def get_organization_model(request):
+    token = request.META.get('HTTP_AUTHORIZATION', '').split('Bearer ')[-1]
+    print(token)
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+    print(headers)
+    # Send a request to the service with the authentication token
+    response = requests.get(f"{settings.INVOLVED_SERVICE_URL}v1/individual/information/", headers=headers)
+    return response
+
 
 class UserListView(APIView):
     authentication_classes = [KeycloakAuthentication]
@@ -82,6 +108,29 @@ class SearchUserView(APIView):
         return Response(serializer.data, status=200)
     
 
+class SearchUserRoleLegalView(APIView):
+    '''
+    - in keycloak panel admin create role with name role_legal an role_real
+    - this method for search and filter for user organization which have role role_legal in keycloak
+    '''
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAdminUser]
+    serializer_class = PanelSerializer
+    
+    def post(self, request):
+        username = request.data.get('username')
+        keycloak = BaseKeyCloak().keycloak_admin
+        users = keycloak.get_users({'username': username})
+        response = []
+        for user in users:
+            roles = keycloak.get_all_roles_of_user(user['id'])
+            if roles:
+                if 'role_legal' in [role['name'] for role in roles['realmMappings']]:
+                    response.append(user)
+        serializer = self.serializer_class(response, many=True)
+        return Response(serializer.data, status=200)
+
+
 class CreateUserView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAdminUser]
@@ -129,4 +178,81 @@ class ListManagerView(APIView):
             serializer = self.seriailizer_class(users, many=True)
             return Response(serializer.data, status=200)
         except:
-            return Response({'message': 'please check keycloak connection'})
+            return Response({'message': 'please check keycloak connection'}, status=400)
+
+
+class ListRoleLegalView(APIView):
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAuthenticated]
+    seriailizer_class = UserMnagerSerializer
+
+    def get(self, request):
+        if 'admin' not in request.user.permissions:
+            raise Http404
+        try:
+            keycloak = BaseKeyCloak().keycloak_admin
+            users = [] 
+            users += keycloak.get_realm_role_members('role_legal')
+            serializer = self.seriailizer_class(users, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'message': 'please check keycloak connection'}, status=400)
+        
+
+class ListRoleRealView(APIView):
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAuthenticated]
+    seriailizer_class = UserMnagerSerializer
+
+    def get(self, request):
+        if 'admin' not in request.user.permissions:
+            raise Http404
+        try:
+            keycloak = BaseKeyCloak().keycloak_admin
+            users = [] 
+            users += keycloak.get_realm_role_members('role_real')
+            serializer = self.seriailizer_class(users, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'message': 'please check keycloak connection'}, status=400)
+
+
+class AddRoleLegalView(APIView):
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAuthenticated]
+    seriailizer_class = UserMnagerSerializer
+
+    def get(self, request):    
+        response = get_organization_model(request)
+        if response.status_code == 200:
+            try:
+                keycloak = BaseKeyCloak().keycloak_admin
+                user = keycloak.get_user(request.user.sub)
+                roles = keycloak.get_realm_role('role_legal')
+                keycloak.assign_realm_roles(user['id'], roles=[roles])
+                serializer = self.seriailizer_class(user, many=True)
+                return Response(serializer.data, status=200)
+            except:
+                return Response({'user': 'cannot found user'}, status=400)
+        else:
+            return Response({'response': 'request to another service error'}, status=response.status_code)
+
+
+class AddRoleRealView(APIView):
+    authentication_classes = [KeycloakAuthentication]
+    permission_classes = [IsAuthenticated]
+    seriailizer_class = UserMnagerSerializer
+
+    def get(self, request):    
+        response = get_organization_model(request)
+        if response.status_code == 200:
+            try:
+                keycloak = BaseKeyCloak().keycloak_admin
+                user = keycloak.get_user(request.user.sub)
+                roles = keycloak.get_realm_role('role_real')
+                keycloak.assign_realm_roles(user['id'], roles=[roles])
+                serializer = self.seriailizer_class(user, many=True)
+                return Response(serializer.data, status=200)
+            except:
+                return Response({'response': 'request to another service error'}, status=response.status_code)
+        

@@ -11,7 +11,7 @@ from .serializers import (
         SignupSerializer, OTPSingnupVerifySerializer, OTPRequestSeriailizer,
         OTPSigninSerializer, PasswordSinginSerializer, PasswordChangeSerializer,
         OTPPasswordChangeVerifySerializer, SignoutSerializer, UserInfoSerializer,
-        RefreshTokenSerializer, DecodeTokenSerializer
+        RefreshTokenSerializer, DecodeTokenSerializer, GetUserSubSerializer
     )
 
 
@@ -196,9 +196,9 @@ class DecodeTokenView(APIView):
     """
     get information comlete about token and user
     """
-    serializer_class = DecodeTokenSerializer
+    serializer_class = GetUserSubSerializer
 
-    @extend_schema(request=DecodeTokenSerializer)
+    @extend_schema(request=GetUserSubSerializer)
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():

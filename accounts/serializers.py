@@ -313,3 +313,7 @@ class DecodeTokenSerializer(TokenBaseSerializer):
         if information in [404, 500]:
             raise serializers.ValidationError({'message':'token dos not validate'}, code=404)
         return information
+
+class GetUserSubSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    id = serializers.CharField()

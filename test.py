@@ -10,13 +10,14 @@ keycloak_connection = KeycloakOpenIDConnection(
                         client_id="test",
                         client_secret_key="frrbAeNm7ZlmR9DQsYc2w8I97eb366NH",
                         verify=False)
-
+import json
 keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
 
-users = keycloak_admin.get_realm_role_members('admin')
-
-import json
-print(json.dumps(users, indent=4))
+users = keycloak_admin.get_users({'username':'tes'})
+for user in users:
+    print(user['username'])
+    user = keycloak_admin.get_all_roles_of_user(user['id'])
+    print('admin' in [role['name'] for role in user['realmMappings']])
 
 '''from keycloak import KeycloakOpenIDConnection, KeycloakAdmin, KeycloakOpenID
 

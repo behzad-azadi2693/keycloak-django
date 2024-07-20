@@ -21,6 +21,7 @@ class UsersSerializer(serializers.Serializer):
 
 class PanelSerializer(serializers.Serializer):
     username = serializers.CharField()
+    id = serializers.CharField()
 
 
 class CreateUserSerializer(serializers.Serializer):
