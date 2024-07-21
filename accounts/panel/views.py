@@ -58,9 +58,10 @@ class UserDisableView(APIView):
         username = request.data.get('username')
         keycloak = UserKeyCloak()
         keycloak.username = username
+        roles = keycloak.list_roles()
+        if roles in [404, 500] or 'admin' in roles:
+            return Response({'Admin': 'this user is a admin'}, status=response)
         response = keycloak.disable()
-        if response in [404, 500]:
-            return Response({'Error': 'get error'}, status=400)
         return Response({'message': 'user disabled'}, status=200)
     
 
@@ -75,7 +76,7 @@ class UserEnableView(APIView):
         keycloak.username = username
         response = keycloak.enable()
         if response in [404, 500]:
-            return Response({'Error': 'get error'}, status=400)
+            return Response({'Error': 'get user error or connection failed'}, status=response)
         return Response({'message': 'user enabled'}, status=200)
     
 
@@ -90,7 +91,7 @@ class EmailUserVerifyView(APIView):
         keycloak.username = username
         response = keycloak.email_verified()
         if response in [404, 500]:
-            return Response({'Error': 'get error'}, status=400)
+            return Response({'Error': 'get error'}, status=response)
         return Response({'message': 'email verify'}, status=200)
 
 
@@ -115,7 +116,7 @@ class SearchUserRoleLegalView(APIView):
     '''
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAdminUser]
-    serializer_class = PanelSerializer
+    serializer_class = UserMnagerSerializer
     
     def post(self, request):
         username = request.data.get('username')

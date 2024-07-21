@@ -299,6 +299,16 @@ class UserKeyCloak(BaseKeyCloak):
             }
         )
         return users
+    
+    def list_roles(self):
+        user_id = self.get_user_id()
+        roles = self.keycloak_admin.get_all_roles_of_user(user_id)
+        if user_id == self.STATUS_NOT_FOUND:
+            return self.STATUS_NOT_FOUND
+        if roles:
+            return [role['name'] for role in roles['realmMappings']]
+        else:
+            return self.STATUS_NOT_FOUND
 
 
 class TokenKeycloak(BaseKeyCloak):
