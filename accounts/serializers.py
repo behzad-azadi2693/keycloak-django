@@ -1,7 +1,10 @@
 import re
 import pytz
 import bcrypt
+import random
+import json
 from django.conf import settings
+from django.core.cache import cache
 from datetime import datetime, timedelta
 from rest_framework import serializers
 from .service import UserKeyCloak, TokenKeycloak
@@ -18,7 +21,7 @@ def valid_phone_email(username):
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
-    password_confierm = serializers.CharField(required=True)
+    password_confirm = serializers.CharField(required=True)
 
     def validate(self, attrs):
         user = UserKeyCloak()
@@ -28,8 +31,8 @@ class SignupSerializer(serializers.Serializer):
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.check_email_verify() == 200 or user.get_user() != 404:
-            raise serializers.ValidationError('user exsits', code=403)
-        if attrs['password'] != attrs['password_confierm']:
+            raise serializers.ValidationError('user exists', code=403)
+        if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError('password not mached', code=401)
         if phone or email:
             return attrs
@@ -46,13 +49,16 @@ class SignupSerializer(serializers.Serializer):
         if email:
             user.create_email()
 
-        #redis username otp=6N time=10
-        '''
+        otp = random.randint(111111, 999999)
+        cache.set(
+            f"otp_{validated_data['username']}",
+            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
+            timeout=10 * 60
+        )
         if phone:
-            otp_phone_sender(attrs['otp'], phone)
+            otp_phone_sender(otp, phone)
         if email:
-            otp_email_sender(attrs['otp'], email)
-        '''
+            otp_email_sender(otp, email)
 
         return validated_data['username']
 
@@ -110,7 +116,6 @@ class OTPSigninSerializer(serializers.Serializer):
         return attrs
     
 
-#add redis
 class OTPSingnupVerifySerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     otp = serializers.IntegerField(required=True)
@@ -120,11 +125,23 @@ class OTPSingnupVerifySerializer(serializers.Serializer):
         phone, email = valid_phone_email(attrs['username'])
         user = UserKeyCloak()
         user.username = attrs['username']
-        # redis check otp username time
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if not phone and not email:
             raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+
+        cached_otp = json.loads(cache.get(f"otp_{user.username}", {}))
+        if not cached_otp:
+            raise serializers.ValidationError({'message': 'otp not found or is expired.'}, code=404)
+
+        if cached_otp.get("retries") >= 5:
+            raise serializers.ValidationError({'message': 'you have reached the maximum number of attempts.'}, code=400)
+
+        if cached_otp.get("otp") != attrs['otp']:
+            cached_otp['retries'] += 1
+            time_from_creation = datetime.now() - cached_otp.get("created_at")
+            cache.set(f"otp_{attrs['username']}", cached_otp, timeout=time_from_creation.seconds)
+            raise serializers.ValidationError({'message': 'otp is not correct'}, code=400)
 
         if user.check_email_verify() == 200:
             raise serializers.ValidationError({'message':'usr befor exsits'}, code=400)
