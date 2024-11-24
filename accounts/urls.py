@@ -1,17 +1,17 @@
 from django.urls import path
 from .views import (
-        SignupView, OTPSingnupVerifyView, OTPRequestView,
-        PasswordSigninView, PasswordChangeView, OTPPasswordChangeVerifyView,
+        SignupView, OTPSingupVerifyView, OTPRequestView,
+        PasswordSigninView, PasswordChangeView,
         SignoutView, UserinfoView, RefreshTokenView, DecodeTokenView,
         #TestView
     )
 
 urlpatterns = [
     path('signup/', SignupView.as_view()),
-    path('signup/otp/verify/', OTPSingnupVerifyView.as_view()),
+    path('signup/otp/verify/', OTPSingupVerifyView.as_view()),
     path('request/otp/', OTPRequestView.as_view()),
     path('signin/password/', PasswordSigninView.as_view()),
-    path('password/otp/verify/', OTPPasswordChangeVerifyView.as_view()),
+    #path('password/otp/verify/', OTPPasswordChangeVerifyView.as_view()),
     path('password/change/', PasswordChangeView.as_view()),
     path('signout/', SignoutView.as_view()),
     path('user/information/', UserinfoView.as_view()),

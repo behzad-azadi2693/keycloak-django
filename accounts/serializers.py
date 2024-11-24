@@ -72,13 +72,13 @@ class OTPRequestSeriailizer(serializers.Serializer):
         user.username = attrs['username']
 
         if not phone and not email:
-            raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+            raise serializers.ValidationError({'message':'username is not correct'}, code=404)
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.get_user_id() == 404:
-            raise serializers.ValidationError({'message':'username not exsits'}, code=404)
+            raise serializers.ValidationError({'message':'username not exsits'}, code=401)
         if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
     
 
@@ -100,7 +100,7 @@ class OTPSigninSerializer(serializers.Serializer):
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if not phone and not email:
-            raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+            raise serializers.ValidationError({'message':'username is not correct'}, code=404)
         if count > 5:
             self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'otp is expired'}, code=410)
@@ -108,15 +108,15 @@ class OTPSigninSerializer(serializers.Serializer):
             self.context['request'].session.flush()
             raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
         if not bcrypt.checkpw(f"{attrs['otp']}+{settings.VALUE_HASH}".encode(), otp.encode()):
-            raise serializers.ValidationError({'message':'otp or username is not   correct'}, code=400)
+            raise serializers.ValidationError({'message':'otp or username is not correct'}, code=400)
         if user.check_email_verify() == 404:
-            raise serializers.ValidationError({'message':'please first verified username'}, code=400)
+            raise serializers.ValidationError({'message':'please first verified username'}, code=401)
         if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
     
 
-class OTPSingnupVerifySerializer(serializers.Serializer):
+class OTPSingupVerifySerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     otp = serializers.IntegerField(required=True)
 
@@ -128,25 +128,25 @@ class OTPSingnupVerifySerializer(serializers.Serializer):
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if not phone and not email:
-            raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+            raise serializers.ValidationError({'message':'username is not correct'}, code=422)
 
         cached_otp = json.loads(cache.get(f"otp_{user.username}", {}))
         if not cached_otp:
             raise serializers.ValidationError({'message': 'otp not found or is expired.'}, code=404)
 
         if cached_otp.get("retries") >= 5:
-            raise serializers.ValidationError({'message': 'you have reached the maximum number of attempts.'}, code=400)
+            raise serializers.ValidationError({'message': 'you have reached the maximum number of attempts.'}, code=429)
 
         if cached_otp.get("otp") != attrs['otp']:
             cached_otp['retries'] += 1
             time_from_creation = datetime.now() - cached_otp.get("created_at")
             cache.set(f"otp_{attrs['username']}", cached_otp, timeout=time_from_creation.seconds)
-            raise serializers.ValidationError({'message': 'otp is not correct'}, code=400)
+            raise serializers.ValidationError({'message': 'otp is not correct'}, code=401)
 
         if user.check_email_verify() == 200:
-            raise serializers.ValidationError({'message':'usr befor exsits'}, code=400)
+            raise serializers.ValidationError({'message':'usr befor exsits'}, code=409)
         if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
 
     def create(self, validated_data):
@@ -162,19 +162,18 @@ class PasswordChangeSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         user = UserKeyCloak()
+        if user.check_connect() == 500:
+            raise serializers.ValidationError({'message':'server not found'}, code=500)
+        
         access_token = self.context['request'].META.get('HTTP_AUTHORIZATION', '').split('Bearer ')[-1]
         user_token = TokenKeycloak()
         user_token.token = access_token
         info = user_token.decode_token
-        user = UserKeyCloak()
         user.username = info['username']
-        
-        if user.check_connect() == 500:
-            raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.check_email_verify() == 404:
-            raise serializers.ValidationError({'message':'please first verified username'}, code=400)
+            raise serializers.ValidationError({'message':'please first verified username'}, code=401)
         if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({'password confirm':'password not matched'}, code=400)
         return attrs
@@ -205,11 +204,11 @@ class PasswordSinginSerializer(serializers.Serializer):
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if not phone and not email:
-            raise serializers.ValidationError({'message':'username is not correct'}, code=400)
+            raise serializers.ValidationError({'message':'username is not correct'}, code=422)
         if user.check_email_verify() == 404:
-            raise serializers.ValidationError({'message':'please first verified username'}, code=400)
+            raise serializers.ValidationError({'message':'please first verified username'}, code=401)
         if user.check_enable() == 404:
-            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=400)
+            raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
     
     def create(self, validated_data):

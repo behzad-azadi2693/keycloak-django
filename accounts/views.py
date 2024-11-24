@@ -8,10 +8,9 @@ from rest_framework.response import Response
 from random import randint
 from drf_spectacular.utils import extend_schema
 from .serializers import (
-        SignupSerializer, OTPSingnupVerifySerializer, OTPRequestSeriailizer,
-        OTPSigninSerializer, PasswordSinginSerializer, PasswordChangeSerializer,
-        OTPPasswordChangeVerifySerializer, SignoutSerializer, UserInfoSerializer,
-        RefreshTokenSerializer, DecodeTokenSerializer, GetUserSubSerializer
+        SignupSerializer, OTPSingupVerifySerializer, OTPRequestSeriailizer,
+        PasswordSinginSerializer, PasswordChangeSerializer, SignoutSerializer,
+        RefreshTokenSerializer, GetUserSubSerializer, UserInfoSerializer
     )
 
 
@@ -31,25 +30,17 @@ class SignupView(APIView):
             return Response(serializer.errors, status=400)
 
 
-class OTPSingnupVerifyView(APIView):
+class OTPSingupVerifyView(APIView):
     """
     verify username with otp 
     """
-    serializer_class = OTPSingnupVerifySerializer
+    serializer_class = OTPSingupVerifySerializer
 
-    @extend_schema(request=OTPSingnupVerifySerializer)
+    @extend_schema(request=OTPSingupVerifySerializer)
     def post(self, request):
-        context = {
-            'otp': request.session.get('OTP_ITS'),
-            'time':  request.session.get('OTP_ITS_TIME'),
-            'count':  request.session.get('OTP_ITS_COUNT'),
-            'username':  request.session.get('ITS_USERNAME'),
-            'request': request
-        }
-        serializer = self.serializer_class(data=request.data, context=context)
+        serializer = self.serializer_class(data=request.data, context={"request":request})
         if serializer.is_valid():
             serializer.save()
-            request.session.flush()
             return Response({'message':'account complete validation'}, status=200)
         else:
             return Response(serializer.errors, status=400)
@@ -65,64 +56,41 @@ class OTPRequestView(APIView):
 
     @extend_schema(request=OTPRequestSeriailizer)
     def post(self, request):
-        otp = randint(10000, 99999)
-        serializer = self.serializer_class(data=request.data, context={'otp':otp})
+        serializer = self.serializer_class(data=request.data, context={'request':request})
         if serializer.is_valid():
-            print('========OTP=========', f"{otp}+{settings.VALUE_HASH}")
-            request.session['OTP_ITS'] = bcrypt.hashpw(f"{otp}+{settings.VALUE_HASH}".encode(), bcrypt.gensalt(14)).decode()
-            request.session['OTP_ITS_TIME'] = datetime.now().astimezone(pytz.timezone('Asia/Tehran')).isoformat()
-            request.session['OTP_ITS_COUNT'] = 0
-            request.session['ITS_USERNAME'] = serializer.data['username']
             return Response({'message': 'otp set for this device'}, status=200)
         else:
             return Response(serializer.errors, status=400)
 
 
+'''
 class OTPPasswordChangeVerifyView(APIView):
     """
-    befor change password user need to verify otp and set accessiblity in session 
+    befor change password user need to verify otp 
     """
-    serializer_class = OTPPasswordChangeVerifySerializer
+    serializer_class = PasswordChangeVerifySerializer
 
-    @extend_schema(request=OTPPasswordChangeVerifySerializer)
+    @extend_schema(request=PasswordChangeVerifySerializer)
     def post(self, request):
-        context = {
-            'otp': request.session.get('OTP_ITS'),
-            'time':  request.session.get('OTP_ITS_TIME'),
-            'count':  request.session.get('OTP_ITS_COUNT'),
-            'username':  request.session.get('ITS_USERNAME'),
-            'request': request
-        }
-        serializer = self.serializer_class(data=request.data, context=context)
+        serializer = self.serializer_class(data=request.data, context={'request':request})
         if serializer.is_valid():
-            username = serializer.data['username']
-            request.session.flush()
-            request.session['ITS_USERNAME'] = username
-            request.session['ITS_CHANGE_PASSWORD'] = True
-            request.session['ITS_CHANGE_PASSWORD_TIME'] = datetime.now().astimezone(pytz.timezone('Asia/Tehran')).isoformat()
             return Response({'message':'go to change password'}, status=200)
         else:
             return Response(serializer.errors, status=400)
+'''
 
 
 class PasswordChangeView(APIView):
     """
     - change password with send new password 
-    - accesseblity check in session
     """
     serializer_class = PasswordChangeSerializer
 
     @extend_schema(request=PasswordChangeSerializer)
     def post(self, request):
-        context = {
-            'change': request.session.get('ITS_CHANGE_PASSWORD', None),
-            'time':  request.session.get('ITS_CHANGE_PASSWORD_TIME', None),
-            'username':  request.session.get('ITS_USERNAME', None),
-        }
-        serializer = self.serializer_class(data=request.data, context=context)
+        serializer = self.serializer_class(data=request.data, context={"request":request})
         if serializer.is_valid():
             serializer.save()
-            request.session.flush()
             return Response({'message':'password change successfully'}, status=200)
         else:
             return Response(serializer.errors, status=400)
