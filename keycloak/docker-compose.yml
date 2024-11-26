@@ -1,8 +1,6 @@
-version: '3'
-
 services:
   postgres:
-    image: postgres:15.4-alpine
+    image: postgres
     hostname: ${POSTGRES_HOST}
     container_name: postgres_keycloak
     restart: on-failure
@@ -16,8 +14,8 @@ services:
       - ${POSTGRES_PORT}
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
-#    volumes:
-#      - ./data/postgres:/var/lib/postgresql/data
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
     networks: 
       - keycloak_network
 
