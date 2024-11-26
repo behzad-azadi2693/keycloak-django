@@ -164,7 +164,7 @@ class UpdateUserView(APIView):
 class ListManagerView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
-    seriailizer_class = UserMnagerSerializer
+    serializer_class = UserMnagerSerializer
 
     def get(self, request):
         if 'admin' not in request.user.permissions:
@@ -176,7 +176,7 @@ class ListManagerView(APIView):
             users += keycloak.get_realm_role_members('support_financial')
             users += keycloak.get_realm_role_members('support_technical')
 
-            serializer = self.seriailizer_class(users, many=True)
+            serializer = self.serializer_class(users, many=True)
             return Response(serializer.data, status=200)
         except:
             return Response({'message': 'please check keycloak connection'}, status=400)
@@ -185,7 +185,7 @@ class ListManagerView(APIView):
 class ListRoleLegalView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
-    seriailizer_class = UserMnagerSerializer
+    serializer_class = UserMnagerSerializer
 
     def get(self, request):
         if 'admin' not in request.user.permissions:
@@ -194,7 +194,7 @@ class ListRoleLegalView(APIView):
             keycloak = BaseKeyCloak().keycloak_admin
             users = [] 
             users += keycloak.get_realm_role_members('role_legal')
-            serializer = self.seriailizer_class(users, many=True)
+            serializer = self.serializer_class(users, many=True)
             return Response(serializer.data, status=200)
         except:
             return Response({'message': 'please check keycloak connection'}, status=400)
@@ -203,7 +203,7 @@ class ListRoleLegalView(APIView):
 class ListRoleRealView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
-    seriailizer_class = UserMnagerSerializer
+    serializer_class = UserMnagerSerializer
 
     def get(self, request):
         if 'admin' not in request.user.permissions:
@@ -212,7 +212,7 @@ class ListRoleRealView(APIView):
             keycloak = BaseKeyCloak().keycloak_admin
             users = [] 
             users += keycloak.get_realm_role_members('role_real')
-            serializer = self.seriailizer_class(users, many=True)
+            serializer = self.serializer_class(users, many=True)
             return Response(serializer.data, status=200)
         except:
             return Response({'message': 'please check keycloak connection'}, status=400)
@@ -221,7 +221,7 @@ class ListRoleRealView(APIView):
 class AddRoleLegalView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
-    seriailizer_class = UserMnagerSerializer
+    serializer_class = UserMnagerSerializer
 
     def get(self, request):    
         response = get_organization_model(request)
@@ -231,7 +231,7 @@ class AddRoleLegalView(APIView):
                 user = keycloak.get_user(request.user.sub)
                 roles = keycloak.get_realm_role('role_legal')
                 keycloak.assign_realm_roles(user['id'], roles=[roles])
-                serializer = self.seriailizer_class(user, many=True)
+                serializer = self.serializer_class(user, many=True)
                 return Response(serializer.data, status=200)
             except:
                 return Response({'user': 'cannot found user'}, status=400)
@@ -242,7 +242,7 @@ class AddRoleLegalView(APIView):
 class AddRoleRealView(APIView):
     authentication_classes = [KeycloakAuthentication]
     permission_classes = [IsAuthenticated]
-    seriailizer_class = UserMnagerSerializer
+    serializer_class = UserMnagerSerializer
 
     def get(self, request):    
         response = get_organization_model(request)
@@ -252,7 +252,7 @@ class AddRoleRealView(APIView):
                 user = keycloak.get_user(request.user.sub)
                 roles = keycloak.get_realm_role('role_real')
                 keycloak.assign_realm_roles(user['id'], roles=[roles])
-                serializer = self.seriailizer_class(user, many=True)
+                serializer = self.serializer_class(user, many=True)
                 return Response(serializer.data, status=200)
             except:
                 return Response({'response': 'request to another service error'}, status=response.status_code)

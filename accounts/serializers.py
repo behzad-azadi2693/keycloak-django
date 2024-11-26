@@ -50,6 +50,7 @@ class SignupSerializer(serializers.Serializer):
             user.create_email()
 
         otp = random.randint(111111, 999999)
+        print('===>', otp)
         cache.set(
             f"otp_{validated_data['username']}",
             json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
@@ -84,6 +85,7 @@ class OTPRequestSeriailizer(serializers.Serializer):
     def create(self, validated_data):
         phone, email = valid_phone_email(validated_data['username'])
         otp = random.randint(111111, 999999)
+        print('===>', otp)
         cache.set(
             f"otp_{validated_data['username']}",
             json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
