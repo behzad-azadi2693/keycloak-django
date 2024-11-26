@@ -61,9 +61,9 @@ class SignupSerializer(serializers.Serializer):
             timeout=10 * 60
         )
         if phone:
-            otp_phone_sender(otp, phone)
+            otp_phone_sender.delay(otp, phone)
         if email:
-            otp_email_sender(otp, email)
+            otp_email_sender.delay(otp, email)
 
         return validated_data['username']
 
