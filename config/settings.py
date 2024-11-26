@@ -250,7 +250,10 @@ SPECTACULAR_SETTINGS = {
 
 
 #CELERY
-CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD')}@{config('REDIS_HOST')}:{config('REDIS_PORT')}/0"
+if DEBUG:
+    CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD')}@localhost:{config('REDIS_PORT', cast=int)}/0"
+else:
+    CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD')}@{config('REDIS_HOST')}:{config('REDIS_PORT', cast=int)}/0"
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -262,20 +265,22 @@ if DEBUG:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": f"redis://:{config('REDIS_PASSWORD')}@localhost:{config('REDIS_PORT')}/1",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            },
+            "LOCATION": f"redis://localhost:{config('REDIS_PORT', cast=int)}/1",
+            'OPTIONS': {
+                'PASSWORD': config('REDIS_PASSWORD'),
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
         }
     }
 else:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": f"redis://:{config('REDIS_PASSWORD')}@{config('REDIS_HOST')}:{config('REDIS_PORT')}/1",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            },
+            "LOCATION": f"redis://{config('REDIS_HOST')}:{config('REDIS_PORT', cast=int)}/1",
+            'OPTIONS': {
+                'PASSWORD': config('REDIS_PASSWORD'),
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
         }
     }
 

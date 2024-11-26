@@ -61,9 +61,9 @@ class SignupSerializer(serializers.Serializer):
             timeout=10 * 60
         )
         if phone:
-            otp_phone_sender.delay(otp, phone)
+            otp_phone_sender.delay(otp, validated_data['username'])
         if email:
-            otp_email_sender.delay(otp, email)
+            otp_email_sender.delay(otp, validated_data['username'])
 
         return validated_data['username']
 
@@ -92,14 +92,19 @@ class OTPRequestSeriailizer(serializers.Serializer):
         print('===>', otp)
         cache.set(
             f"otp_{validated_data['username']}",
-            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
+            json.dumps({
+                "otp": otp, 
+                "retries": 0, 
+                "created_at": datetime.now()
+            }),
             timeout=10 * 60
         )
         if phone:
-            otp_phone_sender(otp, phone)
+            otp_phone_sender.delay(otp, validated_data['username'])
         if email:
-            otp_email_sender(otp, email)
-        pass
+            otp_email_sender.delay(otp, validated_data['username'])
+        
+        return validated_data['username']
     
 
 class OTPSigninSerializer(serializers.Serializer):
