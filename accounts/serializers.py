@@ -92,7 +92,7 @@ class OTPRequestSeriailizer(serializers.Serializer):
         print('===>', otp)
         cache.set(
             f"otp_{validated_data['username']}",
-            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
+            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now().isoformat()}),
             timeout=10 * 60
         )
         if phone:
