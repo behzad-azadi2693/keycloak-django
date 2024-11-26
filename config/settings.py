@@ -29,27 +29,49 @@ SECRET_KEY = config('SECRET_KEY', cast=str)
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS = ["*", 
+                    config('BACKEND_DOMAIN', cast=str), 
+                    f"http://www.{config('BACKEND_DOMAIN', cast=str)}", 
+                    f"https://www.{config('BACKEND_DOMAIN', cast=str)}"
+                ]
 else:
-    ALLOWED_HOSTS = list(config('ALLOWED_HOSTS', default='*', cast=list))
+    ALLOWED_HOSTS = [
+                    'http://localhost:8000', 
+                    config('CI_REGISTRY_IMAGE', cast=str), 
+                    config('BACKEND_DOMAIN', cast=str), 
+                    f"http://www.{config('BACKEND_DOMAIN', cast=str)}", 
+                    f"https://www.{config('BACKEND_DOMAIN', cast=str)}"
+                ]
 
-CSRF_TRUSTED_ORIGINS = [f"https://{config('WEB_DOMAIN')}", f"http://{config('WEB_DOMAIN')}", 'http://127.0.0.1', 'http://localhost', f"http://{config('ACCOUNT_HOST')}"]
+CSRF_TRUSTED_ORIGINS = [
+                    'http://127.0.0.1', 'http://localhost', 
+                    f"https://{config('BACKEND_DOMAIN', cast=str)}", 
+                    f"http://{config('BACKEND_DOMAIN', cast=str)}",
+                    f"https://www.{config('BACKEND_DOMAIN', cast=str)}", 
+                    f"http://www.{config('BACKEND_DOMAIN', cast=str)}",
+                ]
+
 
 # Application definition
 
-INSTALLED_APPS = [
+BASE_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
+
+LOCAL_APPS =[
     'corsheaders',
     'drf_spectacular',
     'rest_framework',
     'accounts',
     'spectacular',
 ]
+
+INSTALLED_APPS = BASE_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -87,13 +109,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': config('POSTGRES_NAME'),
+            'USER': config('POSTGRES_USER'),
+            'PASSWORD': config('POSTGRES_PASSWORD'),
+            'HOST': config('POSTGRES_HOST'),
+            'PORT': config('POSTGRES_PORT'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -132,6 +166,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -163,12 +200,14 @@ if DEBUG:
      CORS_ORIGIN_ALLOW_ALL = True
 else:
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        rf"^https:\/\/(\w+\.)?{config('CORS_ALLOWED_ORIGINS')}$",
-        rf"^http:\/\/(\w+\.)?{config('CORS_ALLOWED_ORIGINS')}$"
+        rf"http:\/\/(\w+\.)?{config('CORS_ALLOWED_ORIGINS')}$",
+        rf"https:\/\/(\w+\.)?{config('CORS_ALLOWED_ORIGINS')}$",
+        rf"^https:\/\/(\w+\.)?{config('BACKEND_DOMAIN')}$",
+        rf"^http:\/\/(\w+\.)?{config('BACKEND_DOMAIN')}$"
         ]
 
 CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization', 'accept', 'user-agent', 'x-csrftoken', 'x-requested-with']
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -197,7 +236,7 @@ SPECTACULAR_SETTINGS = {
     },
     'UPLOADED_FILES_USE_URL': True,
     'TITLE': 'User manage Service API',
-    'DESCRIPTION': 'Handling user manage endpoint Api',
+    'DESCRIPTION': 'SML for SSO keycloak',
     'VERSION': '0.2.0',
     'LICENCE': {'name': 'BSD License'},
     'CONTACT': {'name': 'behzad-azadi', 'url': 'https://github.com/behzad-azadi2693'},
@@ -231,7 +270,7 @@ CACHES = {
 
 #EMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.example.com'
+EMAIL_HOST = config('MAIL_SERVER')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('SMTP_EMAIL')

@@ -1,6 +1,25 @@
 version : '3.9'
 
 services:
+  postgres:
+    image: postgres
+    hostname: ${POSTGRES_HOST}
+    container_name: ${POSTGRES_HOST}
+    command: -p ${POSTGRES_PORT}
+    restart: on-failure
+    environment: 
+      - POSTGRES_DB=${POSTGRES_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - ${POSTGRES_PORT}
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    volumes: 
+      - ./data/postgres:/var/lib/postgresql/data 
+    networks: 
+      - web_network
+
   redis:
     image: redis
     hostname: ${REDIS_HOST}
@@ -15,7 +34,6 @@ services:
     networks:
       - account_network
 
-
   accounts:
     build: .
     image: accounts_service_image
@@ -28,6 +46,7 @@ services:
                     gunicorn -k gevent --workers 4 config.wsgi:application -b 0.0.0.0:${DJANGO_PORT}"
     depends_on:
       - redis
+      - postgres
     env_file:
       - .env
     ports:
@@ -37,7 +56,6 @@ services:
     networks:
       - account_network
       - keycloak_network
-
 
   celery-worker:
     build: .
