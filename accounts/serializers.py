@@ -83,10 +83,6 @@ class OTPRequestSeriailizer(serializers.Serializer):
     
     def create(self, validated_data):
         phone, email = valid_phone_email(validated_data['username'])
-
-        #Todo
-        #set redis otp username time verify
-
         otp = random.randint(111111, 999999)
         cache.set(
             f"otp_{validated_data['username']}",
@@ -108,14 +104,23 @@ class OTPSigninSerializer(serializers.Serializer):
     
         user = UserKeyCloak()
         user.username = attrs['username']
-        # Todo:
-        #get token and check verify retry time
+        otp = json.loads(cache.get(f"otp_{attrs['username']}", {}))
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'please first verified username'}, code=401)
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
+
+        if not otp:
+            raise serializers.ValidationError({'message':'otp not found or is expired.'}, code=404)
+        if otp.get("retries") >= 5:
+            raise serializers.ValidationError({'message':'you have reached the maximum number of attempts.'}, code=429)
+        if otp.get("otp") != attrs['otp']:
+            otp['retries'] += 1
+            time_from_creation = datetime.now() - otp.get("created_at")
+            cache.set(f"otp_{attrs['username']}", otp, timeout=time_from_creation.seconds)
+            raise serializers.ValidationError({'message':'otp is not correct'}, code=401)
         return attrs
     
     def create(self, validated_data):

@@ -74,22 +74,18 @@ class BaseKeyCloak:
             return None
     
     def admin_connect_passwordless(self):
-        try:    
-            keycloak_connection = KeycloakOpenIDConnection(
-                server_url=settings.KEYCLOAK_SERVER_URL,
-                username=settings.KEYCLOAK_USERNAME,
-                realm_name=settings.KEYCLOAK_REALM_NAME,
-                user_realm_name=settings.KEYCLOAK_USER_REALM_NAME,
+        try:
+            keycloak_openid = KeycloakOpenID(
+                server_url=f"{settings.KEYCLOAK_SERVER_URL}/auth",
                 client_id=settings.KEYCLOAK_CLIENT_ID,
-                client_secret_key=settings.KEYCLOAK_CLIENT_SECRET_KEY,
-                verify=True
+                realm_name=settings.KEYCLOAK_REALM_NAME,
+                client_secret_key=settings.KEYCLOAK_CLIENT_SECRET_KEY
             )
-
-            keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
-            return keycloak_admin
+            keycloak_openid.well_known()
+            return keycloak_openid
         except Exception as e:
             logging.error(f"Error connecting to Keycloak: {e}")
-            return None
+            return self.STATUS_SERVER_ERROR
 
     def openid_connect(self):
         try:
@@ -354,7 +350,7 @@ class TokenKeycloak(BaseKeyCloak):
             logging.error(f"Error for get user token: {e}")
             return self.STATUS_SERVER_ERROR
         
-    def get_token_passwordless(self, value):
+    def get_token_passwordless(self):
         try:
             token = self.keycloak_passwordless.token(self.username)
             return token
