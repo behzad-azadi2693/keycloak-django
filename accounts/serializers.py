@@ -30,14 +30,14 @@ class SignupSerializer(serializers.Serializer):
 
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
-        if user.check_email_verify() == 200 or user.get_user() != 404:
-            raise serializers.ValidationError('user exists', code=403)
+        if user.check_email_verify() == 200:
+            raise serializers.ValidationError({'username':'user exists'}, code=403)
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError('password not mached', code=401)
+            raise serializers.ValidationError({'password_confirm':'password not mached'}, code=401)
         if phone or email:
             return attrs
         else:
-            raise serializers.ValidationError('username is not correct', code=403)
+            raise serializers.ValidationError({'username':'username is not correct'}, code=403)
         
     def create(self, validated_data):
         phone, email = valid_phone_email(validated_data['username'])
@@ -53,7 +53,11 @@ class SignupSerializer(serializers.Serializer):
         print('===>', otp)
         cache.set(
             f"otp_{validated_data['username']}",
-            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
+            json.dumps({
+                "otp": otp, 
+                "retries": 0, 
+                "created_at": datetime.now().isoformat()
+                }),
             timeout=10 * 60
         )
         if phone:
