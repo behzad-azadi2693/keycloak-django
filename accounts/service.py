@@ -352,7 +352,7 @@ class TokenKeycloak(BaseKeyCloak):
         
     def get_token_passwordless(self):
         try:
-            token = self.keycloak_passwordless.token(self.username)
+            token = self.keycloak_passwordless.token(self.username, grant_type=["client_credentials"])
             return token
         except Exception as e:
             logging.error(f"Error for get user token: {e}")
