@@ -17,7 +17,7 @@ def valid_phone_email(username):
     email = re.match(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', username)
     return phone, email
 
-#add redis
+
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
@@ -81,39 +81,48 @@ class OTPRequestSeriailizer(serializers.Serializer):
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
     
+    def create(self, validated_data):
+        phone, email = valid_phone_email(validated_data['username'])
+
+        #Todo
+        #set redis otp username time verify
+
+        otp = random.randint(111111, 999999)
+        cache.set(
+            f"otp_{validated_data['username']}",
+            json.dumps({"otp": otp, "retries": 0, "created_at": datetime.now()}),
+            timeout=10 * 60
+        )
+        if phone:
+            otp_phone_sender(otp, phone)
+        if email:
+            otp_email_sender(otp, email)
+        pass
+    
 
 class OTPSigninSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     otp = serializers.IntegerField(required=True)
 
     def validate(self, attrs):
-        otp, time, count, username = self.context['otp'], self.context['time'], self.context['count'], self.context['username']
-        if None in [time, username, otp, count]:
-            raise serializers.ValidationError({'message':'you dont access for this page'}, code=404)
     
-        phone, email = valid_phone_email(attrs['username'])
-        time_delta, now_time = make_naive(datetime.fromisoformat(time) + timedelta(minutes=5)), make_naive(datetime.now().astimezone(pytz.timezone('Asia/Tehran')))
         user = UserKeyCloak()
         user.username = attrs['username']
-        self.context['request'].session['OTP_ITS_COUNT'] = count + 1
-
+        # Todo:
+        #get token and check verify retry time
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
-        if not phone and not email:
-            raise serializers.ValidationError({'message':'username is not correct'}, code=404)
-        if count > 5:
-            self.context['request'].session.flush()
-            raise serializers.ValidationError({'message':'otp is expired'}, code=410)
-        if time_delta < now_time:
-            self.context['request'].session.flush()
-            raise serializers.ValidationError({'message':'timing is expired for otp'}, code=410)
-        if not bcrypt.checkpw(f"{attrs['otp']}+{settings.VALUE_HASH}".encode(), otp.encode()):
-            raise serializers.ValidationError({'message':'otp or username is not correct'}, code=400)
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'please first verified username'}, code=401)
         if user.check_enable() == 404:
             raise serializers.ValidationError({'message':'user not available calling with admin'}, code=403)
         return attrs
+    
+    def create(self, validated_data):
+        user = TokenKeycloak()
+        user.username = validated_data['username']
+        token = user.get_token_passwordless()
+        return token
     
 
 class OTPSingupVerifySerializer(serializers.Serializer):
