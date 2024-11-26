@@ -6,17 +6,17 @@ services:
     image: redis
     hostname: ${REDIS_HOST}
     container_name: redis_account
-    command: redis-server --requirepass redis --port 6379
+    command: redis-server --requirepass ${REDIS_PASSWORD} --port ${REDIS_PORT}
     restart: on-failure
     environment:
       REDIS_PASSWORD: redis
-      REDIS_PORT: 6379
+      REDIS_PORT: ${REDIS_PORT}
     volumes:
       - ./redis.conf:/usr/local/etc/redis.conf
     expose:
-      - 6379
+      - ${REDIS_PORT}
     ports:
-      - 6379:6379
+      - ${REDIS_PORT}:${REDIS_PORT}
     networks:
       - account_network
 
