@@ -40,6 +40,7 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError({'username':'username is not correct'}, code=403)
         
     def create(self, validated_data):
+        print(validated_data.get("username"))
         phone, email = valid_phone_email(validated_data['username'])
         user = UserKeyCloak()
         user.username = validated_data['username']
@@ -60,12 +61,12 @@ class SignupSerializer(serializers.Serializer):
                 }),
             timeout=10 * 60
         )
-        if phone:
-            otp_phone_sender.delay(otp, validated_data['username'])
-        if email:
-            otp_email_sender.delay(otp, validated_data['username'])
+        # if phone:
+        #     otp_phone_sender.delay(otp, validated_data['username'])
+        # if email:
+        #     otp_email_sender.delay(otp, validated_data['username'])
 
-        return validated_data['username']
+        return validated_data
 
 
 class OTPRequestSeriailizer(serializers.Serializer):
@@ -104,14 +105,21 @@ class OTPRequestSeriailizer(serializers.Serializer):
     
 
 class OTPSigninSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    otp = serializers.IntegerField(required=True)
+    username = serializers.CharField(required=True, write_only=True)
+    otp = serializers.IntegerField(required=True, write_only=True)
+    access_token = serializers.CharField(read_only=True)
+    expires_in = serializers.IntegerField(read_only=True)
+    refresh_expires_in = serializers.IntegerField(read_only=True)
 
     def validate(self, attrs):
     
         user = UserKeyCloak()
         user.username = attrs['username']
-        otp = json.loads(cache.get(f"otp_{attrs['username']}", {}))
+        otp = cache.get(f"otp_{attrs['username']}", {})
+        if otp:
+            otp = json.loads(otp)
+        else:
+            raise serializers.ValidationError({'message':'otp not found or is expired.'}, code=404)
         if user.check_connect() == 500:
             raise serializers.ValidationError({'message':'server not found'}, code=500)
         if user.check_email_verify() == 404:
@@ -126,8 +134,9 @@ class OTPSigninSerializer(serializers.Serializer):
         if otp.get("otp") != attrs['otp']:
             otp['retries'] += 1
             time_from_creation = datetime.now() - otp.get("created_at")
-            cache.set(f"otp_{attrs['username']}", otp, timeout=time_from_creation.seconds)
+            cache.set(f"otp_{attrs['username']}", json.dumps(otp), timeout=time_from_creation.seconds)
             raise serializers.ValidationError({'message':'otp is not correct'}, code=401)
+        cache.delete(f"otp_{attrs['username']}")
         return attrs
     
     def create(self, validated_data):
@@ -161,7 +170,7 @@ class OTPSingupVerifySerializer(serializers.Serializer):
         if cached_otp.get("otp") != attrs['otp']:
             cached_otp['retries'] += 1
             time_from_creation = datetime.now() - cached_otp.get("created_at")
-            cache.set(f"otp_{attrs['username']}", cached_otp, timeout=time_from_creation.seconds)
+            cache.set(f"otp_{attrs['username']}", json.dumps(cached_otp), timeout=time_from_creation.seconds)
             raise serializers.ValidationError({'message': 'otp is not correct'}, code=401)
 
         if user.check_email_verify() == 200:
@@ -189,7 +198,8 @@ class PasswordChangeSerializer(serializers.Serializer):
         access_token = self.context['request'].META.get('HTTP_AUTHORIZATION', '').split('Bearer ')[-1]
         user_token = TokenKeycloak()
         user_token.token = access_token
-        info = user_token.decode_token
+        info = user_token.decode_token()
+        print(info)
         user.username = info['username']
         if user.check_email_verify() == 404:
             raise serializers.ValidationError({'message':'please first verified username'}, code=401)
@@ -214,8 +224,12 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 class PasswordSinginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
+    username = serializers.CharField(required=True, write_only=True)
+    password = serializers.CharField(required=True, write_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
+    expires_in = serializers.IntegerField(read_only=True)
+    refresh_expires_in = serializers.IntegerField(read_only=True)
 
     def validate(self, attrs):
         user = UserKeyCloak()

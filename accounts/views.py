@@ -137,7 +137,7 @@ class PasswordSigninView(APIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({'access_token':srz['access_token'], 'refresh_token':srz['refresh_token']}, status=200)
+            return Response(serializer.data, status=200)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400

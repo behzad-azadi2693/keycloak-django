@@ -14,8 +14,8 @@ services:
       - ${POSTGRES_PORT}
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+#    volumes:
+#      - ./data/postgres:/var/lib/postgresql/data
     networks: 
       - keycloak_network
 

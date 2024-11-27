@@ -261,28 +261,16 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Tehran'
 
 
-if DEBUG:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": f"redis://localhost:{config('REDIS_PORT', cast=int)}/1",
-            'OPTIONS': {
-                'PASSWORD': config('REDIS_PASSWORD'),
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            }
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{config('REDIS_HOST')}:{config('REDIS_PORT', cast=int)}/1",
+        'OPTIONS': {
+            'PASSWORD': config('REDIS_PASSWORD'),
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     }
-else:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": f"redis://{config('REDIS_HOST')}:{config('REDIS_PORT', cast=int)}/1",
-            'OPTIONS': {
-                'PASSWORD': config('REDIS_PASSWORD'),
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            }
-        }
-    }
+}
 
 
 #EMAIL
