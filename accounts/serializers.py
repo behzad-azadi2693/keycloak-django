@@ -25,28 +25,60 @@ class SignupSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
     password_confirm = serializers.CharField(required=True)
 
+    def validate_password(self, password):
+        """
+        Validates that the password meets the following criteria:
+        - At least 8 characters
+        - At least 1 uppercase letter
+        - At least 1 lowercase letter
+        - At least 2 digits
+        - At least 1 special character
+        """
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        if not re.search(r'[A-Z]', password):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        if not re.search(r'[a-z]', password):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        if len(re.findall(r'\d', password)) < 2:
+            raise serializers.ValidationError("Password must contain at least two numbers.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            raise serializers.ValidationError("Password must contain at least one special character.")
+        return password
+
     def validate(self, attrs):
         user = UserKeyCloak()
         user.username = attrs['username']
         phone, email = valid_phone_email(attrs['username'])
 
+        # Check server connectivity
         if user.check_connect() == 500:
-            raise serializers.ValidationError({'message':'server not found'}, code=500)
+            raise serializers.ValidationError({'message': 'Server not found'}, code=500)
+
+        # Check if user already exists
         if user.check_email_verify() == 200:
-            raise serializers.ValidationError({'username':'user exists'}, code=403)
+            raise serializers.ValidationError({'username': 'User already exists'}, code=403)
+
+        # Check if passwords match
         if attrs['password'] != attrs['password_confirm']:
-            raise serializers.ValidationError({'password_confirm':'password not mached'}, code=401)
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match'}, code=401)
+
+        # Validate password strength
+        self.validate_password(attrs['password'])
+
+        # Validate username
         if phone or email:
             return attrs
         else:
-            raise serializers.ValidationError({'username':'username is not correct'}, code=403)
-        
+            raise serializers.ValidationError({'username': 'Username is not correct'}, code=403)
+
     def create(self, validated_data):
         print(validated_data.get("username"))
         phone, email = valid_phone_email(validated_data['username'])
         user = UserKeyCloak()
         user.username = validated_data['username']
         user.password = validated_data['password']
+
         if phone:
             user.create_phone()
         if email:
@@ -57,10 +89,10 @@ class SignupSerializer(serializers.Serializer):
         cache.set(
             f"otp_{validated_data['username']}",
             json.dumps({
-                "otp": otp, 
-                "retries": 0, 
+                "otp": otp,
+                "retries": 0,
                 "created_at": datetime.now().isoformat()
-                }),
+            }),
             timeout=10 * 60
         )
         # if phone:
