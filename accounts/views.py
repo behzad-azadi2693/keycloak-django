@@ -33,7 +33,6 @@ class SignupView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -56,7 +55,6 @@ class OTPSingUpVerifyView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -81,7 +79,6 @@ class OTPRequestView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -99,7 +96,6 @@ class SigninOTPView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -122,7 +118,6 @@ class PasswordChangeView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -143,7 +138,6 @@ class PasswordSigninView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -164,7 +158,6 @@ class SignOutView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -185,7 +178,6 @@ class UserinfoView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -212,7 +204,6 @@ class RefreshTokenView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)
 
 
@@ -233,5 +224,4 @@ class DecodeTokenView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            print(code)
             return Response(exc.detail, status=code)

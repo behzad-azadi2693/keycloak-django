@@ -19,9 +19,7 @@ from .serializers import (
 
 def get_organization_model(request):
     token = request.META.get("HTTP_AUTHORIZATION", "").split("Bearer ")[-1]
-    print(token)
     headers = {"Authorization": f"Bearer {token}"}
-    print(headers)
     # Send a request to the service with the authentication token
     response = requests.get(
         f"{settings.INVOLVED_SERVICE_URL}v1/organization/information/", headers=headers
@@ -31,9 +29,7 @@ def get_organization_model(request):
 
 def get_organization_model(request):
     token = request.META.get("HTTP_AUTHORIZATION", "").split("Bearer ")[-1]
-    print(token)
     headers = {"Authorization": f"Bearer {token}"}
-    print(headers)
     # Send a request to the service with the authentication token
     response = requests.get(
         f"{settings.INVOLVED_SERVICE_URL}v1/individual/information/", headers=headers

@@ -315,7 +315,6 @@ class PasswordChangeSerializer(serializers.Serializer):
         user_token = TokenKeycloak()
         user_token.token = access_token
         info = user_token.decode_token()
-        print(info)
         user.username = info["username"]
         if user.check_email_verify() == 404:
             raise serializers.ValidationError(
