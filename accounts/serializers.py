@@ -1,4 +1,6 @@
 import re
+import string
+
 import pytz
 import bcrypt
 import random
@@ -102,7 +104,24 @@ class OTPRequestSeriailizer(serializers.Serializer):
             otp_email_sender.delay(otp, validated_data['username'])
         
         return validated_data['username']
-    
+
+
+def _generate_password():
+    lowercase = string.ascii_lowercase
+    uppercase = string.ascii_uppercase
+    digits = string.digits
+    special = string.punctuation
+    all_characters = lowercase + uppercase + digits + special
+    password = [
+        random.choice(lowercase),
+        random.choice(uppercase),
+        random.choice(digits),
+        random.choice(special),
+    ]
+    password += random.choices(all_characters, k=12)
+    random.shuffle(password)
+    return ''.join(password)
+
 
 class OTPSigninSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, write_only=True)
@@ -140,11 +159,22 @@ class OTPSigninSerializer(serializers.Serializer):
         return attrs
     
     def create(self, validated_data):
-        user = TokenKeycloak()
+        user = UserKeyCloak()
+        updated_password = _generate_password()
         user.username = validated_data['username']
-        token = user.get_token_passwordless()
-        return token
-    
+        user.password = updated_password
+        user.change_password()
+        token = TokenKeycloak()
+        token.username = validated_data['username']
+        token.password = updated_password
+        token_info = token.get_token()
+        phone, email = valid_phone_email(validated_data['username'])
+        if phone:
+            otp_phone_sender.delay(updated_password, validated_data['username'])
+        if email:
+            otp_email_sender.delay(updated_password, validated_data['username'])
+        return token_info
+
 
 class OTPSingupVerifySerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
