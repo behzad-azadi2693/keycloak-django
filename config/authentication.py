@@ -7,7 +7,7 @@ from keycloak import KeycloakOpenID
 class KeycloakAuthentication(BaseAuthentication):
     def authenticate(self, request):
         # Retrieve the token from the request headers
-        token = request.META.get('HTTP_AUTHORIZATION', '').split('Bearer ')[-1]
+        token = request.META.get("HTTP_AUTHORIZATION", "").split("Bearer ")[-1]
         if not token:
             return None
 
@@ -17,7 +17,7 @@ class KeycloakAuthentication(BaseAuthentication):
                 server_url=f"{settings.KEYCLOAK_SERVER_URL}/auth",
                 client_id=settings.KEYCLOAK_CLIENT_ID,
                 realm_name=settings.KEYCLOAK_REALM_NAME,
-                client_secret_key=settings.KEYCLOAK_CLIENT_SECRET_KEY
+                client_secret_key=settings.KEYCLOAK_CLIENT_SECRET_KEY,
             )
         except Exception as e:
             logging.error("Error configuring Keycloak client", e)
@@ -25,7 +25,7 @@ class KeycloakAuthentication(BaseAuthentication):
 
         try:
             # Decode token to get user information
-            user_info = keycloak_openid.decode_token(token) 
+            user_info = keycloak_openid.decode_token(token)
             if not user_info:
                 logging.error("No user information found in token")
                 return None
@@ -33,16 +33,17 @@ class KeycloakAuthentication(BaseAuthentication):
             # Instead of returning a Django user, return a mock user object with the necessary info
             class MockUser:
                 def __init__(self, user_info):
-                    self.sub = user_info.get('sub')
-                    self.username = user_info.get('preferred_username')
-                    self.name = user_info.get('name')
-                    self.email = user_info.get('email')
-                    self.first_name = user_info.get('given_name')
-                    self.last_name = user_info.get('family_name')
-                    self.permissions = user_info['realm_access']['roles']
+                    self.sub = user_info.get("sub")
+                    self.username = user_info.get("preferred_username")
+                    self.name = user_info.get("name")
+                    self.email = user_info.get("email")
+                    self.first_name = user_info.get("given_name")
+                    self.last_name = user_info.get("family_name")
+                    self.permissions = user_info["realm_access"]["roles"]
 
                 def is_authenticated(self):
                     return True
+
             return MockUser(user_info), None
 
         except Exception as e:

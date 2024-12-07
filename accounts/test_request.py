@@ -11,7 +11,7 @@ data = {
     "client_id": "test",
     "client_secret": "h5VYkf6g2FFiFsApChQFtJfajn2gG6lT",
     "username": "test3@gmail.com",
-    "password":"test44"
+    "password": "test44",
 }
 
 # ارسال درخواست به Keycloak
@@ -25,5 +25,3 @@ if response.status_code == 200:
     print("Access Token:", access_token)
 else:
     print("Error:", response.status_code, response.text)
-
-

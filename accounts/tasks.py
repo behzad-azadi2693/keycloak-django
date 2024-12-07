@@ -3,7 +3,7 @@ from utils import OTPSender
 
 
 @shared_task(bind=True)
-def otp_email_sender(self, otp:int, email:str):
+def otp_email_sender(self, otp: int, email: str):
     sender = OTPSender(otp)
     sender.email = email
     sender.email_sender()
