@@ -254,18 +254,6 @@ class UserKeyCloak(BaseKeyCloak):
             logging.error(f"Error updating email verification status: {e}")
             return self.STATUS_NOT_FOUND
 
-    def email_verified(self):
-        user = self.get_user()
-        if user == self.STATUS_NOT_FOUND:
-            return self.STATUS_NOT_FOUND
-        try:
-            user["emailVerified"] = True
-            self.keycloak_admin.update_user(user_id=user["id"], payload=user)
-            return self.STATUS_NO_CONTENT
-        except Exception as e:
-            logging.error(f"Error updating email verification status: {e}")
-            return self.STATUS_NOT_FOUND
-
     def email_unverified(self):
         user = self.get_user()
         if user == self.STATUS_NOT_FOUND:

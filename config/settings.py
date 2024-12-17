@@ -28,21 +28,17 @@ SECRET_KEY = config("SECRET_KEY", cast=str)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-if DEBUG:
-    ALLOWED_HOSTS = [
-        "*",
-        config("BACKEND_DOMAIN", cast=str),
-        f"http://www.{config('BACKEND_DOMAIN', cast=str)}",
-        f"https://www.{config('BACKEND_DOMAIN', cast=str)}",
-    ]
+if DEBUG:   
+    ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 else:
     ALLOWED_HOSTS = [
-        "http://localhost:8000",
-        config("CI_REGISTRY_IMAGE", cast=str),
-        config("BACKEND_DOMAIN", cast=str),
-        f"http://www.{config('BACKEND_DOMAIN', cast=str)}",
-        f"https://www.{config('BACKEND_DOMAIN', cast=str)}",
+        config("CORS_ALLOWED_ORIGINS", cast=str),
+        config('BACKEND_DOMAIN', cast=str),
+        config('CONTAINER_HOSTNAME', cast=str),
+        "localhost",
+        "127.0.0.1",
     ]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1",
@@ -349,3 +345,6 @@ CSP_CONNECT_SRC += [
     "https://*.",
 ]  # Allow Swagger API connections
 CSP_CONNECT_SRC += [f"https://{config('CORS_ALLOWED_ORIGINS', cast=str)}"]
+
+
+AUTH_USER_MODEL = 'accounts.User'

@@ -1,26 +1,23 @@
 from django.urls import path
 from .views import (
-    SignupView,
-    OTPSingUpVerifyView,
-    OTPRequestView,
-    PasswordSigninView,
-    PasswordChangeView,
-    SigninOTPView,
-    SignOutView,
-    UserinfoView,
-    RefreshTokenView,
-    DecodeTokenView,
-)
+        SignUpView, VerifyUsernameView, OTPSigninView,
+        ChangePaswordView, ProfileView, UserListView,
+        UserUpdateView, ProfileUpdateView, PasswordSigninView, 
+        UsernameSendOTPView
+    )
+
 
 urlpatterns = [
-    path("signup/", SignupView.as_view()),
-    path("signup/otp/verify/", OTPSingUpVerifyView.as_view()),
-    path("request/otp/", OTPRequestView.as_view()),
-    path("signin/password/", PasswordSigninView.as_view()),
-    path("signin/otp/", SigninOTPView.as_view()),
-    path("password/change/", PasswordChangeView.as_view()),
-    path("signout/", SignOutView.as_view()),
-    path("user/information/", UserinfoView.as_view()),
-    path("refresh/token/", RefreshTokenView.as_view()),
-    path("decode/token/", DecodeTokenView.as_view()),
+    path('signup/', SignUpView.as_view(), name='register'),
+    path('verify/username/', VerifyUsernameView.as_view(), name='register'),
+    path('otp/signin/', OTPSigninView.as_view(), name='register'),
+    path('password/signin/', PasswordSigninView.as_view(), name='register'),
+    path('change/password/', ChangePaswordView.as_view(), name='register'),
+    path('username/send/OTP/', UsernameSendOTPView.as_view()),
+    
+    path('profile/', ProfileView.as_view()),
+    path('user/list/', UserListView.as_view()),
+    path('profile/update/<str:username>/', ProfileUpdateView.as_view()),
+    path('user/update/<str:username>/', UserUpdateView.as_view()),
 ]
+

@@ -1,94 +1,88 @@
-from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
+from .models import ProfileModel
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import ValidationError
+from django.http import Http404
 from .serializers import (
-    SignupSerializer,
-    OTPSingUpVerifySerializer,
-    OTPRequestSerializer,
-    PasswordSingInSerializer,
-    PasswordChangeSerializer,
-    LogoutSerializer,
-    RefreshTokenSerializer,
-    GetUserSubSerializer,
-    UserInfoSerializer,
-    OTPSigninSerializer,
-)
+        SignUpSerializer, ProfileSerializer, VerifyUsernameSerializer,
+        ChangePasswordSerializer, UsernameSendOTPSerializer, UserListSerializer,
+        PasswordSignInSerializer, OTPSigninSerializer, UserInfoSerializer,
+        DecodeTokenSerializer, RefreshTokenSerializer, LogoutSerializer
+    )
 
 
-class SignupView(APIView):
-    """
-    register user with username and password in to sso
-    """
+class SignUpView(generics.CreateAPIView):
+    serializer_class = SignUpSerializer
 
-    serializer_class = SignupSerializer
-
-    @extend_schema(request=SignupSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=200)
+            user = serializer.save()
+            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code
+            )
 
+class VerifyUsernameView(APIView):
+    serializer_class = VerifyUsernameSerializer
 
-class OTPSingUpVerifyView(APIView):
-    """
-    verify username with otp
-    """
-
-    serializer_class = OTPSingUpVerifySerializer
-
-    @extend_schema(request=OTPSingUpVerifySerializer)
     def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        context = {
+            'request':request
+        }
+        serializer = self.serializer_class(data=request.data, context=context)
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({"message": "account complete validation"}, status=200)
+            user = serializer.save()
+            return Response(
+                {'message': 'User verified username successfully'}, 
+                status=200
+            )
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code
+            )
 
 
-class OTPRequestView(APIView):
-    """
-    - send otp for user - this view use for verify username
-    - change password etc.
-    - everywhere need to send otp for username
-    """
+class UsernameSendOTPView(APIView):
+    serializer_class = UsernameSendOTPSerializer
 
-    serializer_class = OTPRequestSerializer
-
-    @extend_schema(request=OTPRequestSerializer)
     def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request":request})
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({"message": "otp set for this device"}, status=200)
+            return Response({"message":"send otp for you"}, status=200)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code 
+            )
+    
 
-
-class SigninOTPView(APIView):
+class OTPSigninView(APIView):
     serializer_class = OTPSigninSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request":request})
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -96,41 +90,18 @@ class SigninOTPView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
-
-
-class PasswordChangeView(APIView):
-    """
-    - change password with send new password
-    """
-
-    serializer_class = PasswordChangeSerializer
-
-    @extend_schema(request=PasswordChangeSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({"message": "password change successfully"}, status=200)
-        except ValidationError as exc:
-            error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code
+            )
 
 
 class PasswordSigninView(APIView):
-    """
-    login user and get token access and refresh
-    """
+    serializer_class = PasswordSignInSerializer
 
-    serializer_class = PasswordSingInSerializer
-
-    @extend_schema(request=PasswordSingInSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={"request":request})
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -138,89 +109,149 @@ class PasswordSigninView(APIView):
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code
+            )
 
+
+class ChangePaswordView(APIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = []
+
+    def put(self, request):
+        context = {
+            'request':request
+        }
+        serializer = self.serializer_class(data=request.data, context=context)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            return Response({'message': 'password change successfully'}, status=status.HTTP_200_OK)
+        except ValidationError as exc:
+            error_codes = exc.get_codes() or 400
+            code = next(iter(error_codes.values()))[0] if error_codes else 400
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code  
+            )
+
+
+class ProfileView(APIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = []
+
+    def get(self, request):
+        profile = get_object_or_404(ProfileModel, user=request.user)
+        serializer = self.serializer_class(profile, context={"request":request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = self.serializer(data=request.data, context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.errors, status=200)
+
+    def put(self, request):
+        profile = get_object_or_404(ProfileModel, user=request.user)
+        serializer = self.serializer_class(profile, data=request.data, context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.errors, status=200)
+
+    def patch(self, request):
+        profile = get_object_or_404(ProfileModel, user=request.user)
+        serializer = self.serializer_class(profile, data=request.data, partial=True, context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.errors, status=200)
+
+
+class UserListView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserListSerializer
+    authentication_classes = []
+
+    def get(self, request):
+        if request.user.access != 'NOR':
+            objs = get_user_model().objects.all()
+        else:
+            raise Http404
+        serializer = self.serializer_class(objs, many=True, context={"request":request})
+        return Response(serializer.data, status=200)
+
+
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserListSerializer
+    authentication_classes = []
+
+    def put(self, request, username=None):
+        if request.user.is_admin or request.user.access == 'ADM':
+            user = get_object_or_404(get_user_model, user__username=username)
+        else:
+            user = get_object_or_404(get_user_model, user__username=request.user.username, is_active=True)
+
+        serializer = self.serializer_class(user, data=request.data, context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.errors, status=200)
+
+
+class ProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
+    authentication_classes = []
+
+    def put(self, request, username=None):
+        if request.user.is_admin or request.user.access == 'ADM':
+            user = get_object_or_404(ProfileModel, user__username=username)
+        else:
+            user = get_object_or_404(ProfileModel, user__username=request.user.username, is_active=True)
+
+        serializer = self.serializer_class(user, data=request.data, context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.errors, status=200)
+    
+
+class DecodeView(APIView):
+    serializer_class = DecodeTokenSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = []
+
+    def get(self, request):
+        serializer = self.serializer_class()
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            return Response({'message': 'password change successfully'}, status=status.HTTP_200_OK)
+        except ValidationError as exc:
+            error_codes = exc.get_codes() or 400
+            code = next(iter(error_codes.values()))[0] if error_codes else 400
+            print(code)
+            return Response(
+                exc.detail, 
+                status=code  
+            )
 
 class SignOutView(APIView):
     """
     remove and delete token refresh from system for logout user
     """
-
+    permission_classes = [IsAuthenticated]
     serializer_class = LogoutSerializer
 
-    @extend_schema(request=LogoutSerializer)
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response({"message": "user sign out successfully"}, status=200)
-        except ValidationError as exc:
-            error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
-
-
-class UserinfoView(APIView):
-    """
-    get user info from keycloak for authorizations
-    """
-
-    serializer_class = UserInfoSerializer
-
-    @extend_schema(request=UserInfoSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=200)
-        except ValidationError as exc:
-            error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
-
-
-class RefreshTokenView(APIView):
-    """
-    get and update token access
-    """
-
-    serializer_class = RefreshTokenSerializer
-
-    @extend_schema(request=RefreshTokenSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(
-                {
-                    "access_token": serializer.data["access_token"],
-                    "refresh_token": serializer.data["refresh_token"],
-                },
-                status=200,
-            )
-        except ValidationError as exc:
-            error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
-            return Response(exc.detail, status=code)
-
-
-class DecodeTokenView(APIView):
-    """
-    get information complete about token and user
-    """
-
-    serializer_class = GetUserSubSerializer
-
-    @extend_schema(request=GetUserSubSerializer)
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=200)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
             code = next(iter(error_codes.values()))[0] if error_codes else 400
