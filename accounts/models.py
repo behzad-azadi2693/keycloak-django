@@ -6,7 +6,6 @@ from django.core.validators import RegexValidator
 
 class User(AbstractBaseUser,PermissionsMixin):
     username = models.CharField(max_length=250, unique=True,verbose_name='your username')
-    is_active = models.BooleanField(default=False, verbose_name="user is active")
     is_staff = models.BooleanField(default=False, verbose_name="user is active")
     is_admin = models.BooleanField(default=False, verbose_name="user is admin")
     
@@ -30,10 +29,10 @@ class User(AbstractBaseUser,PermissionsMixin):
     @property
     def is_staff(self) -> bool:
         return self.is_admin
-    
+
     @property
-    def is_username_check(self) -> bool:
-        return self.is_active
+    def is_active(self) -> bool:
+        return self.is_admin
     
     def save(self, *args, **kwargs):
         """saving to DB disabled"""

@@ -51,6 +51,8 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         keycloak = UserKeyCloak()
+        keycloak.username = attrs['username']
+
         if keycloak.check_connect() == 500:
             raise serializers.ValidationError({"message": "Server not found"}, code=500)
 
@@ -58,10 +60,13 @@ class SignUpSerializer(serializers.Serializer):
         if not phone and not email:
             raise serializers.ValidationError({"username":"phone or email is not correct"}, code=400)
         
-        user = User.objects.filter(username=attrs['username'], is_active=True)
+        user = User.objects.filter(username=attrs['username'])
         if user.exists():
-            raise serializers.ValidationError({"user": "user is exsits"}, code=401)
-        
+            if keycloak.check_enable() == 404:
+                raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
+            if keycloak.check_email_verify() == 200:
+                raise serializers.ValidationError({"message": "user already exsits"}, code=400)
+            
         if attrs['password'] != attrs['password_confierm']:
             raise serializers.ValidationError({"password":"Passwords is not match."}, code=404)
         
@@ -158,17 +163,20 @@ class PasswordSignInSerializer(serializers.Serializer):
 
 class VerifyUsernameSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
-    otp = serializers.IntegerField(required=True)
+    otp = serializers.IntegerField(required=True, write_only=True)
 
     def validate(self, attrs):
         keycloak = UserKeyCloak()
         if keycloak.check_connect() == 500:
             raise serializers.ValidationError({"message": "Server not found"}, code=500)
 
-        user = User.objects.filter(username=attrs['username'], is_active=True).first()
+        user = User.objects.filter(username=attrs['username']).first()
         if user:
-            raise serializers.ValidationError({'user': 'User does not exist or is inactive.'}, code=403)
-
+            if keycloak.check_enable() == 404:
+                raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
+            if keycloak.check_email_verify() == 200:
+                raise serializers.ValidationError({"message": "user already exsits"}, code=400)
+            
         cached_otp = json.loads(cache.get(f"otp_{attrs['username']}", {}))
         if not cached_otp:
             raise serializers.ValidationError(
@@ -197,12 +205,9 @@ class VerifyUsernameSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         keycloak = UserKeyCloak()
-        user = User.objects.get(username=validated_data['username'])
-        user.is_active = True
-        user.save()
         keycloak.username = validated_data["username"]
         keycloak.email_verified()
-        return user
+        return validated_data['username']
     
 
 class OTPSigninSerializer(serializers.Serializer):
@@ -217,7 +222,7 @@ class OTPSigninSerializer(serializers.Serializer):
         keycloak = UserKeyCloak()
         keycloak.username = attrs['username']
 
-        user = User.objects.filter(username=attrs['username'], is_active=True).first()
+        user = User.objects.filter(username=attrs['username']).first()
         if not user:
             raise serializers.ValidationError({'username': 'User does not exist or is inactive.'}, code=403)
 
@@ -306,7 +311,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     
     def validate(self, attrs):
         keycloak = UserKeyCloak()
-        user = User.objects.filter(id=self.context['request'].user.id, is_active=True).first()
+        user = User.objects.filter(id=self.context['request'].user.id).first()
 
         if not user:
             raise serializers.ValidationError({"user":"user is not exsits"}, code=401)
@@ -346,7 +351,7 @@ class UsernameSendOTPSerializer(serializers.Serializer):
 
         if not phone and not email:
             raise serializers.ValidationError({"username":"phone or email is not correct"}, code=400)
-        user = get_object_or_404(User, username=attrs['username'], is_active=True)
+        user = get_object_or_404(User, username=attrs['username'])
         
         if keycloak.check_enable() == 404:
             raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
@@ -405,7 +410,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'is_active', 'is_admin', 'is_staff')
+        fields = ('username', )
 
 
 class ProfileSerializer(serializers.ModelSerializer):

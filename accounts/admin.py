@@ -4,11 +4,11 @@ from django.contrib.auth.models import Group
 from .models import User
 
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'is_active', 'is_admin')
-    list_filter = ('is_admin', 'is_active')
+    list_display = ('username', 'is_admin')
+    list_filter = ('is_admin', )
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Permissions', {'fields': ('is_admin', 'is_active')}),
+        ('Permissions', {'fields': ('is_admin', )}),
         ('Important dates', {'fields': ('last_login',)}),
     )
     add_fieldsets = (
