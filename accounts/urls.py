@@ -2,8 +2,7 @@ from django.urls import path
 from .views import (
         SignUpView, VerifyUsernameView, OTPSigninView,
         ChangePaswordView, ProfileView, UserListView,
-        UserUpdateView, ProfileUpdateView, PasswordSigninView, 
-        UsernameSendOTPView
+        ProfileUpdateView, PasswordSigninView, UsernameSendOTPView
     )
 
 

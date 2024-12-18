@@ -243,7 +243,7 @@ SPECTACULAR_SETTINGS = {
     "UPLOADED_FILES_USE_URL": True,
     "TITLE": "User manage Service API",
     "DESCRIPTION": "SML for SSO keycloak",
-    "VERSION": "0.2.0",
+    "VERSION": "0.3.0",
     "LICENCE": {"name": "BSD License"},
     "CONTACT": {"name": "behzad-azadi", "url": "https://github.com/behzad-azadi2693"},
     # keycloak SPEC
@@ -289,9 +289,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', cast=str)
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', cast=str)
 DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER', cast=str)  # Default sender email
-
-
-
 
 VALUE_HASH = pyotp.random_base32()
 
