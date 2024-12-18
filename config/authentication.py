@@ -41,7 +41,7 @@ class KeycloakAuthentication(BaseAuthentication):
                     self.last_name = user_info.get("family_name")
                     self.permissions = user_info.get("realm_access", {}).get("roles", [])
                     self.groups = user_info.get("groups", [])  # Fetch groups list
-                print(user_info.get("groups", []))
+
                 def is_authenticated(self):
                     return True
 

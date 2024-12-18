@@ -191,6 +191,10 @@ REST_FRAMEWORK = {
         "config.authentication.KeycloakAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Include if needed
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
