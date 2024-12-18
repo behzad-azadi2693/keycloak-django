@@ -38,25 +38,15 @@ class SignUpSerializer(serializers.Serializer):
         - At least 1 special character
         """
         if len(password) < 8:
-            raise serializers.ValidationError(
-                "Password must be at least 8 characters long."
-            )
+            raise serializers.ValidationError("Password must be at least 8 characters long.", code=400)
         if not re.search(r"[A-Z]", password):
-            raise serializers.ValidationError(
-                "Password must contain at least one uppercase letter."
-            )
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.", code=400)
         if not re.search(r"[a-z]", password):
-            raise serializers.ValidationError(
-                "Password must contain at least one lowercase letter."
-            )
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.", code=400)
         if len(re.findall(r"\d", password)) < 2:
-            raise serializers.ValidationError(
-                "Password must contain at least two numbers."
-            )
+            raise serializers.ValidationError("Password must contain at least two numbers.", code=400)
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            raise serializers.ValidationError(
-                "Password must contain at least one special character."
-            )
+            raise serializers.ValidationError("Password must contain at least one special character.", code=400)
         return password
 
     def validate(self, attrs):
@@ -68,7 +58,7 @@ class SignUpSerializer(serializers.Serializer):
         if not phone and not email:
             raise serializers.ValidationError({"username":"phone or email is not correct"}, code=400)
         
-        user = User.objects.filter(username=attrs['username'])
+        user = User.objects.filter(username=attrs['username'], is_active=True)
         if user.exists():
             raise serializers.ValidationError({"user": "user is exsits"}, code=401)
         
@@ -79,18 +69,16 @@ class SignUpSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         keycloak = UserKeyCloak()
+        keycloak.username = validated_data['username']
+        keycloak.password = validated_data['password']
         phone, email = valid_username(validated_data['username'])
         user = User.objects.filter(username=validated_data['username']).first()
         if user:
             # Update password for the existing user
             if keycloak.check_enable() == 404:
-                raise serializers.ValidationError(
-                    {"message": "user not available calling with admin"}, code=403
-                )
-            if user.check_email_verify() == 404:
-                raise serializers.ValidationError(
-                    {"message": "please call with admin"}, code=401
-                )
+                raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
+            if keycloak.check_email_verify() == 200:
+                raise serializers.ValidationError({"message": "user already exsits"}, code=400)
             user.set_password(validated_data['password'])
             user.save()
         else:
@@ -117,9 +105,9 @@ class SignUpSerializer(serializers.Serializer):
         )
 
         if phone:
-            otp_phone_sender(user.otp, user.username)
+            otp_phone_sender(otp, validated_data['username'])
         if email:
-            otp_email_sender(user.otp, user.username)
+            otp_email_sender(otp, validated_data['username'])
 
         return user
 
@@ -161,9 +149,10 @@ class PasswordSignInSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"message": "service authentications error"}, code=500
             )
+        print(token_info)
         return {
-            "access_token": '',
-            "refresh_token": '',
+            "access_token": token_info['access_token'],
+            "refresh_token": token_info['refresh_token'],
         }
 
 
@@ -177,10 +166,10 @@ class VerifyUsernameSerializer(serializers.Serializer):
             raise serializers.ValidationError({"message": "Server not found"}, code=500)
 
         user = User.objects.filter(username=attrs['username'], is_active=True).first()
-        if not user:
+        if user:
             raise serializers.ValidationError({'user': 'User does not exist or is inactive.'}, code=403)
 
-        cached_otp = json.loads(cache.get(f"otp_{user.username}", {}))
+        cached_otp = json.loads(cache.get(f"otp_{attrs['username']}", {}))
         if not cached_otp:
             raise serializers.ValidationError(
                 {"message": "otp not found or is expired."}, code=404
@@ -236,19 +225,13 @@ class OTPSigninSerializer(serializers.Serializer):
         if otp:
             otp = json.loads(otp)
         else:
-            raise serializers.ValidationError(
-                {"message": "otp not found or is expired."}, code=404
-            )
+            raise serializers.ValidationError({"message": "otp not found or is expired."}, code=404)
         if keycloak.check_connect() == 500:
             raise serializers.ValidationError({"message": "server not found"}, code=500)
         if keycloak.check_email_verify() == 404:
-            raise serializers.ValidationError(
-                {"message": "please first verified username"}, code=401
-            )
-        if user.check_enable() == 404:
-            raise serializers.ValidationError(
-                {"message": "user not available calling with admin"}, code=403
-            )
+            raise serializers.ValidationError({"message": "please first verified username"}, code=401)
+        if keycloak.check_enable() == 404:
+            raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
 
         if not otp:
             raise serializers.ValidationError(
@@ -275,13 +258,14 @@ class OTPSigninSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
-        token = UserKeyCloak()
+        token = TokenKeycloak()
         # Generate tokens
         token.username = validated_data["username"]
+
         token_info = token.get_token()
         return {
-            "access_token": '',
-            "refresh_token": '',
+            "access_token": token_info['access_token'],
+            "refresh_token": token_info['refresh_token'],
         }
 
 
@@ -352,26 +336,22 @@ class ChangePasswordSerializer(serializers.Serializer):
         return user
 
 
-class UsernameSendOTPSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', )
+class UsernameSendOTPSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
 
     def validate(self, attrs):
         keycloak = UserKeyCloak()
+        keycloak.username = attrs['username']
         phone, email = valid_username(attrs['username'])
+
         if not phone and not email:
             raise serializers.ValidationError({"username":"phone or email is not correct"}, code=400)
         user = get_object_or_404(User, username=attrs['username'], is_active=True)
         
         if keycloak.check_enable() == 404:
-            raise serializers.ValidationError(
-                {"message": "user not available calling with admin"}, code=403
-            )
+            raise serializers.ValidationError({"message": "user not available calling with admin"}, code=403)
         if keycloak.check_email_verify() == 404:
-            raise serializers.ValidationError(
-                {"message": "please call with admin"}, code=401
-            )
+            raise serializers.ValidationError({"message": "please call with admin"}, code=401)
         
         return attrs
     
@@ -425,7 +405,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'is_active', 'is_admin', 'is_staff', 'access')
+        fields = ('username', 'is_active', 'is_admin', 'is_staff')
 
 
 class ProfileSerializer(serializers.ModelSerializer):

@@ -277,13 +277,16 @@ CACHES = {
 }
 
 
-# EMAIL
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_HOST = config("MAIL_SERVER")
+#EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST', cast=str)
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config("SMTP_EMAIL")
-EMAIL_HOST_PASSWORD = config("SMTP_PASSWORD")
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', cast=str)
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', cast=str)
+DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER', cast=str)  # Default sender email
+
+
 
 
 VALUE_HASH = pyotp.random_base32()

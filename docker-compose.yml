@@ -1,7 +1,6 @@
 
 services:
 
-
   redis:
     image: redis
     hostname: ${REDIS_HOST}

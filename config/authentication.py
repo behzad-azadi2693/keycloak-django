@@ -39,8 +39,9 @@ class KeycloakAuthentication(BaseAuthentication):
                     self.email = user_info.get("email")
                     self.first_name = user_info.get("given_name")
                     self.last_name = user_info.get("family_name")
-                    self.permissions = user_info["realm_access"]["roles"]
-
+                    self.permissions = user_info.get("realm_access", {}).get("roles", [])
+                    self.groups = user_info.get("groups", [])  # Fetch groups list
+                print(user_info.get("groups", []))
                 def is_authenticated(self):
                     return True
 

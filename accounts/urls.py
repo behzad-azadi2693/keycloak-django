@@ -13,11 +13,9 @@ urlpatterns = [
     path('otp/signin/', OTPSigninView.as_view(), name='register'),
     path('password/signin/', PasswordSigninView.as_view(), name='register'),
     path('change/password/', ChangePaswordView.as_view(), name='register'),
-    path('username/send/OTP/', UsernameSendOTPView.as_view()),
-    
+    path('send/OTP/', UsernameSendOTPView.as_view()),
     path('profile/', ProfileView.as_view()),
     path('user/list/', UserListView.as_view()),
     path('profile/update/<str:username>/', ProfileUpdateView.as_view()),
-    path('user/update/<str:username>/', UserUpdateView.as_view()),
 ]
 

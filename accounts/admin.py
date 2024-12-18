@@ -8,8 +8,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('is_admin', 'is_active')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('OTP info', {'fields': ('otp', 'otp_time', 'otp_try')}),
-        ('Permissions', {'fields': ('is_admin', 'is_active', 'access')}),
+        ('Permissions', {'fields': ('is_admin', 'is_active')}),
         ('Important dates', {'fields': ('last_login',)}),
     )
     add_fieldsets = (

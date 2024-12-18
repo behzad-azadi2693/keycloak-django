@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from config.authentication import KeycloakAuthentication
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from .models import ProfileModel
@@ -11,8 +12,8 @@ from django.http import Http404
 from .serializers import (
         SignUpSerializer, ProfileSerializer, VerifyUsernameSerializer,
         ChangePasswordSerializer, UsernameSendOTPSerializer, UserListSerializer,
-        PasswordSignInSerializer, OTPSigninSerializer, UserInfoSerializer,
-        DecodeTokenSerializer, RefreshTokenSerializer, LogoutSerializer
+        PasswordSignInSerializer, OTPSigninSerializer, DecodeTokenSerializer,
+        LogoutSerializer
     )
 
 
@@ -24,15 +25,17 @@ class SignUpView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
-            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "User registered successfully"}, status=201)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
+            code = next(iter(error_codes.values())) if error_codes else 400
+            print(code)
             print(code)
             return Response(
                 exc.detail, 
-                status=code
+                status=200
             )
+
 
 class VerifyUsernameView(APIView):
     serializer_class = VerifyUsernameSerializer
@@ -70,11 +73,11 @@ class UsernameSendOTPView(APIView):
             return Response({"message":"send otp for you"}, status=200)
         except ValidationError as exc:
             error_codes = exc.get_codes() or 400
-            code = next(iter(error_codes.values()))[0] if error_codes else 400
+            code = next(iter(error_codes.values())) if error_codes else 400
             print(code)
             return Response(
                 exc.detail, 
-                status=code 
+                status=200 
             )
     
 
@@ -119,7 +122,7 @@ class PasswordSigninView(APIView):
 class ChangePaswordView(APIView):
     serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def put(self, request):
         context = {
@@ -143,7 +146,7 @@ class ChangePaswordView(APIView):
 class ProfileView(APIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def get(self, request):
         profile = get_object_or_404(ProfileModel, user=request.user)
@@ -174,13 +177,11 @@ class ProfileView(APIView):
 class UserListView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserListSerializer
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def get(self, request):
-        if request.user.access != 'NOR':
-            objs = get_user_model().objects.all()
-        else:
-            raise Http404
+        print(request.user.groups)
+        objs = get_user_model().objects.all()
         serializer = self.serializer_class(objs, many=True, context={"request":request})
         return Response(serializer.data, status=200)
 
@@ -188,7 +189,7 @@ class UserListView(APIView):
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserListSerializer
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def put(self, request, username=None):
         if request.user.is_admin or request.user.access == 'ADM':
@@ -205,7 +206,7 @@ class UserUpdateView(APIView):
 class ProfileUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProfileSerializer
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def put(self, request, username=None):
         if request.user.is_admin or request.user.access == 'ADM':
@@ -222,7 +223,7 @@ class ProfileUpdateView(APIView):
 class DecodeView(APIView):
     serializer_class = DecodeTokenSerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = []
+    authentication_classes = [KeycloakAuthentication]
 
     def get(self, request):
         serializer = self.serializer_class()
@@ -239,12 +240,14 @@ class DecodeView(APIView):
                 status=code  
             )
 
+
 class SignOutView(APIView):
     """
     remove and delete token refresh from system for logout user
     """
     permission_classes = [IsAuthenticated]
     serializer_class = LogoutSerializer
+    authentication_classes = [KeycloakAuthentication]
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
