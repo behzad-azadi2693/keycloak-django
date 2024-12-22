@@ -14,35 +14,33 @@ services:
       - ${POSTGRES_PORT}
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
-#    volumes:
-#      - ./data/postgres:/var/lib/postgresql/data
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
     networks: 
       - keycloak_network
 
-
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.6
-    hostname: ${KEYCLOAK_HOST}
+    image: quay.io/keycloak/keycloak:latest
     container_name: keycloak_container
-    command: start-dev
+    command: start --https-certificate-file=/certs/tls.pem --https-certificate-key-file=/certs/tls.pem --http-port=8443
     environment:
-      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
-      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres/${POSTGRES_DB}
-      - KC_DB_USERNAME=${POSTGRES_USER}
-      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HTTPS_CERTIFICATE_FILE: /certs/tls.pem
+      KC_HOSTNAME: fanapkeycloak.itscom.ir
+    ports:
+      - 8443:8443
+    volumes:
+      - ./certs:/certs
     depends_on:
       - postgres
-    volumes:
-      - ./data/keycloak-data:/opt/keycloak/data
-    ports:
-      - ${KEYCLOAK_PORT}:${KEYCLOAK_PORT}
     networks:
       - keycloak_network
 
 
 networks:
   keycloak_network:
-    driver: bridge
-    name: keycloak_network
